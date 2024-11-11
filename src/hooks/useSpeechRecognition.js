@@ -16,7 +16,7 @@ function getCookie(name) {
   return cookieValue;
 }
 
-const useSpeechRecognition = (addMessage) => {
+const useSpeechRecognition = (addMessage, setIsLoading) => {
   const [isListening, setIsListening] = useState(false);
   const [interimTranscript, setInterimTranscript] = useState('');
   const [finalTranscript, setFinalTranscript] = useState('');
@@ -24,6 +24,42 @@ const useSpeechRecognition = (addMessage) => {
   const [recognition, setRecognition] = useState(null);
   const [silenceTimer, setSilenceTimer] = useState(null);
   const currentAudioRef = useRef(null);
+  const socketRef = useRef(null);  // WebSocket을 저장할 ref
+
+  // WebSocket 초기화 및 설정
+  useEffect(() => {
+    socketRef.current = new WebSocket('ws://127.0.0.1:8000/ws/speech/');
+
+    socketRef.current.onopen = () => {
+      console.log("WebSocket connection opened.");
+    };
+
+    socketRef.current.onclose = () => {
+      console.log("WebSocket connection closed.");
+    };
+
+    socketRef.current.onerror = (error) => {
+      console.error("WebSocket error:", error);
+    };
+
+    socketRef.current.onmessage = async (event) => {
+      const data = JSON.parse(event.data);
+      console.log('Response from backend via WebSocket:', data);
+
+      if (data.response) {
+        
+        await speakResponse(data.response);
+        addMessage('bot', data.response);
+      }
+    };
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.close();
+      }
+    };
+  }, [addMessage]);
+
   // 오디오 중지 함수
   const stopCurrentAudio = useCallback(() => {
     if (currentAudioRef.current) {
@@ -53,50 +89,34 @@ const useSpeechRecognition = (addMessage) => {
 
       currentAudioRef.current = audio;
 
+      setIsLoading(false); // 메세지 수신 시 로딩 종료
       audio.play();
       audio.onended = () => {
         URL.revokeObjectURL(audioUrl);
         currentAudioRef.current = null;
       };
+      console.timeEnd('tts2')
     } catch (error) {
       console.error('TTS Error:', error);
       currentAudioRef.current = null;
     }
   }, [stopCurrentAudio]);
 
-  // 백엔드 통신 함수
-  const sendToBackend = useCallback(async (transcript) => {
+  // WebSocket을 통해 텍스트 전송
+  const sendToBackend = useCallback((transcript) => {
     stopCurrentAudio();
-    try {
-      console.time("tts2");
-      const response = await fetch('http://127.0.0.1:8000/process_speech/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': getCookie('csrftoken')
-        },
-        body: JSON.stringify({ text: transcript }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
-      const data = await response.json();
-      console.log('Response from backend:', data);
-
-      if (data.response) {
-        await speakResponse(data.response);
-        addMessage('bot', data.response);
-      }
-      console.timeEnd("tts2");
-    } catch (error) {
-      console.error('Error sending transcript to backend:', error);
-      addMessage('bot', '죄송합니다. 오류가 발생했습니다.');
-      stopListening();
+    console.time("tts2");
+    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+      socketRef.current.send(JSON.stringify({
+        text: transcript,
+        session_id: 'default_session'
+      }));
+    } else {
+      console.error('WebSocket is not open.');
     }
-  }, [speakResponse, addMessage]);
+  }, [stopCurrentAudio]);
 
+  // 음성 인식 초기화
   useEffect(() => {
     if ('webkitSpeechRecognition' in window) {
       const recognitionInstance = new window.webkitSpeechRecognition();

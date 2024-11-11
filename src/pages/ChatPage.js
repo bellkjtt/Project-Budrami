@@ -23,7 +23,7 @@ function ChatPAge() {
     startListening,
     stopListening,
     sendToBackend
-  } = useSpeechRecognition(addMessage);
+  } = useSpeechRecognition(addMessage,setIsLoading);
 
   useEffect(() => {
     const resetCount = async () => {
@@ -65,10 +65,10 @@ function ChatPAge() {
       addMessage('user', message);
 
       setIsLoading(true); // 로딩 시작
-      // console.log("Setting isLoading to ", isLoading);
+      console.log("Setting isLoading to ", isLoading);
       await sendToBackend(message);
-      // console.log("Setting isLoading to ", isLoading);
-      setIsLoading(false); // 로딩 종료
+      console.log("Setting isLoading to ", isLoading);
+      // setIsLoading(false); // 로딩 종료
     }
   };
 
