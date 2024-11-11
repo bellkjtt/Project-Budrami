@@ -1,15 +1,16 @@
-// App.js
+// ChatPAge.js
 import { useState, useEffect, useCallback, useRef } from 'react';
-import '../styles/App.css';
+import '../styles/ChatPage.css';
 import Camera from '../components/Camera';
 import StepTracker from '../components/StepTracker';
-import Header from '../components/common/Header';
+// import Header from '../components/common/Header';
 import ChatContainer from '../components/ChatContainer';
 import useSpeechRecognition from '../hooks/useSpeechRecognition';
 
-function App() {
+function ChatPAge() {
   const [messages, setMessages] = useState([]);
   const [audioContext, setAudioContext] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const addMessage = useCallback((sender, text) => {
     setMessages(prevMessages => [...prevMessages, { sender, text }]);
@@ -51,10 +52,10 @@ function App() {
     }
 
     if (isListening) {
-      console.log("Stopping listening at:", new Date().toLocaleString());
+      // console.log("Stopping listening at:", new Date().toLocaleString());
       stopListening();
     } else {
-      console.log("Starting listening at:", new Date().toLocaleString());
+      // console.log("Starting listening at:", new Date().toLocaleString());
       startListening();
     }
   };
@@ -62,7 +63,12 @@ function App() {
   const handleSendMessage = async (message) => {
     if (message.trim()) {
       addMessage('user', message);
+
+      setIsLoading(true); // 로딩 시작
+      // console.log("Setting isLoading to ", isLoading);
       await sendToBackend(message);
+      // console.log("Setting isLoading to ", isLoading);
+      setIsLoading(false); // 로딩 종료
     }
   };
 
@@ -75,11 +81,10 @@ function App() {
   return (
     <div className="main-container">
       {/* <Header /> */}
-      
       <main className="main-content">
-      <StepTracker />
+        <StepTracker />
         <div className="chat-wrapper">
-        <Camera />
+          <Camera />
           <div className="chat-section">
             <ChatContainer
               messages={messages}
@@ -87,6 +92,7 @@ function App() {
               currentTranscript={interimTranscript}
               onRecord={handleRecord}
               isRecording={isListening}
+              isLoading={isLoading} // 추가된 속성
             />
           </div>
         </div>
@@ -95,6 +101,6 @@ function App() {
   );
 }
 
-export default App;
+export default ChatPAge;
 
 

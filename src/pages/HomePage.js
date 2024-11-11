@@ -15,11 +15,6 @@ const Arrow = () => (
 </svg>
 );
 
-
-
-
-
-
 const HomePage = () => {
   return (
     <div className="home-container">

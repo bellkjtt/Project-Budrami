@@ -42,7 +42,10 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "gemini_app",
+    'channels',
 ]
+
+ASGI_APPLICATION = "gemini.asgi.application"
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',  # CORS 추가

@@ -111,3 +111,23 @@
   from { opacity: 0; transform: translateY(1vw); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ChatContainer.css */
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-top-color: #8B4513;
+  border-radius: 50%;
+  animation: spin 1s ease infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

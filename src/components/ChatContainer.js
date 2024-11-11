@@ -4,7 +4,8 @@ import smalllifelogo from '../images/liferary_logo.png';
 import './ChatContainer.css';
 
 
-export default function ChatContainer({ messages, onSendMessage, currentTranscript, onRecord, isRecording }) {
+// ChatContainer.js
+export default function ChatContainer({ messages, onSendMessage, currentTranscript, onRecord, isRecording, isLoading }) {
   const [inputText, setInputText] = useState("");
   const chatContainerRef = useRef(null);
 
@@ -12,7 +13,7 @@ export default function ChatContainer({ messages, onSendMessage, currentTranscri
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
-  }, [messages, currentTranscript]);
+  }, [messages, currentTranscript, isLoading]); // isLoading도 추가하여 스크롤 유지
 
   const handleSend = () => {
     if (inputText.trim()) {
@@ -36,6 +37,13 @@ export default function ChatContainer({ messages, onSendMessage, currentTranscri
           </div>
         ))}
         {currentTranscript && <div className="chat-message user-message">{currentTranscript}</div>}
+        
+        {/* 로딩 스피너 표시 */}
+        {isLoading && (
+          <div className="chat-message bot-message loading-spinner">
+            <div className="spinner"></div>
+          </div>
+        )}
       </div>
       <div className="input-container">
         <input
