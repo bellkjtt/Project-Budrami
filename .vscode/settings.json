@@ -1,0 +1,9 @@
+{
+    "terminal.integrated.profiles.windows": {
+        "Conda Project": {
+            "path": "C:\\Windows\\System32\\cmd.exe",
+            "args": ["/K", "conda deactivate && conda activate project"]
+        }
+    },
+    "terminal.integrated.defaultProfile.windows": "Conda Project"
+}
