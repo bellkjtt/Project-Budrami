@@ -266,7 +266,7 @@
 
     .main-title {
         font-family: 'Noto Serif KR', serif;
-        font-size: clamp(60px, 4vw, 60px);
+        font-size: clamp(70px, 4vw, 70px);
         font-weight: 1000;
         color: #000;
         margin-bottom: 1vh;
@@ -277,7 +277,7 @@
     
     .sub-title {
         font-family: 'Noto Serif KR', serif;
-        font-size: clamp(80px, 5vw, 80px);
+        font-size: clamp(90px, 5vw, 90px);
         font-weight: 1500;
         color: #000;
         line-height: 1.2;
