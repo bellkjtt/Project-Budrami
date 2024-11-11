@@ -12,6 +12,7 @@ function ChatPAge() {
   const [audioContext, setAudioContext] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
+
   const addMessage = useCallback((sender, text) => {
     setMessages(prevMessages => [...prevMessages, { sender, text }]);
   }, []);
@@ -23,7 +24,7 @@ function ChatPAge() {
     startListening,
     stopListening,
     sendToBackend
-  } = useSpeechRecognition(addMessage);
+  } = useSpeechRecognition(addMessage, setIsLoading);
 
   useEffect(() => {
     const resetCount = async () => {
@@ -68,7 +69,7 @@ function ChatPAge() {
       // console.log("Setting isLoading to ", isLoading);
       await sendToBackend(message);
       // console.log("Setting isLoading to ", isLoading);
-      setIsLoading(false); // 로딩 종료
+      // setIsLoading(false); // 로딩 종료
     }
   };
 
