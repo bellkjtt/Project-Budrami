@@ -1,7 +1,7 @@
 /* components/common/Header.css */
 .header {
     display: flex;
-    height: 131px;
+    height: 15vh; /* 화면 높이의 10% */
     align-items: center;
     background-color: var(--secondary-color);
     padding: 0 22px;
@@ -9,6 +9,6 @@
 }
 
 .header-logo {
-    height: 95px;
-    width: auto;
+    height: 120%; /* 로고의 높이를 헤더 높이에 맞추어 조정 */
+    width: 120%;
 }

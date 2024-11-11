@@ -1,112 +1,113 @@
 .chat-container {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-  }
-  
-  .chat-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 16px;
-  }
-  
-  .chat-header-logo {
-    height: 100px;
-    width: auto;
-  }
-  
-  .chat-button {
-    border-radius: 20px;
-    background-color: #8B4513;
-    padding: 8px 24px;
-    color: white;
-    font-size: 1.2em;
-    border: none;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-  }
-  
-  .chat-button:hover {
-    background-color: #5D3311;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  }
-  
-  .chat-messages {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-    background-color: var(--chat-bg-color);
-    padding: 16px;
-    margin-bottom: 16px;
-    border-radius: 8px;
-  }
-  
-  .chat-message {
-    max-width: 70%;
-    padding: 12px;
-    margin-bottom: 10px;
-    border-radius: 18px;
-    word-wrap: break-word;
-    animation: fadeIn 0.3s ease-in-out;
-  }
-  
-  .user-message {
-    align-self: flex-end;
-    background-color: #e3f2fd;
-    color: #000;
-    margin-left: auto;
-    border-bottom-right-radius: 4px;
-  }
-  
-  .bot-message {
-    align-self: flex-start;
-    background-color: #f0f0f0;
-    color: #000;
-    margin-right: auto;
-    border-bottom-left-radius: 4px;
-  }
-  
-  .input-container {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  
-  .input-field {
-    flex-grow: 1;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 1.2em;
-    transition: border-color 0.3s;
-  }
-  
-  .input-field:focus {
-    outline: none;
-    border-color: #8B4513;
-  }
-  
-  .send-button {
-    padding: 8px 20px;
-    background-color: #8B4513;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s, transform 0.3s;
-    font-size: 1.2em;
-  }
-  
-  .send-button:hover {
-    background-color: #5D3311;
-    transform: translateY(-2px);
-  }
-  
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2vh;
+}
+
+.chat-header-logo {
+  height: min(15vh, 20vw); /* 로고 크기 증가 */
+  width: auto;
+}
+
+.chat-button {
+  border-radius: min(2vw, 3vh);
+  background-color: #8B4513;
+  padding: min(1.5vh, 2.5vw) min(2vw, 4vh);
+  color: white;
+  font-size: min(1.7vw, 2.2vh);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 0.2vw 0.5vw rgba(0, 0, 0, 0.2);
+}
+
+.chat-button:hover {
+  background-color: #5D3311;
+  transform: translateY(-0.2vw);
+  box-shadow: 0 0.4vw 0.8vw rgba(0, 0, 0, 0.2);
+}
+
+.chat-messages {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  background-color: var(--chat-bg-color);
+  padding: 2vw;
+  margin-bottom: 2vh;
+  border-radius: 1vw;
+}
+
+.chat-message {
+  max-width: 70%;
+  padding: 1.2vw;
+  margin-bottom: 1vw;
+  border-radius: 2vw;
+  word-wrap: break-word;
+  animation: fadeIn 0.3s ease-in-out;
+  font-size: min(1.5vw, 2.2vh); /* 메시지 글자 크기 증가 */
+}
+
+.user-message {
+  align-self: flex-end;
+  background-color: #e3f2fd;
+  color: #000;
+  margin-left: auto;
+  border-bottom-right-radius: 1vw;
+}
+
+.bot-message {
+  align-self: flex-start;
+  background-color: #f0f0f0;
+  color: #000;
+  margin-right: auto;
+  border-bottom-left-radius: 1vw;
+}
+
+.input-container {
+  display: flex;
+  align-items: center;
+  gap: 1vw;
+}
+
+.input-field {
+  flex-grow: 1;
+  padding: 1vh;
+  border: 0.1vw solid #ccc;
+  border-radius: 1vw;
+  font-size: min(1.5vw, 2.2vh);
+  transition: border-color 0.3s;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: #8B4513;
+}
+
+.send-button {
+  padding: min(1vh, 1.5vw) min(2vw, 3vh);
+  background-color: #8B4513;
+  color: white;
+  border: none;
+  border-radius: 2vw;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.3s;
+  font-size: min(1.5vw, 2.2vh);
+}
+
+.send-button:hover {
+  background-color: #5D3311;
+  transform: translateY(-0.2vw);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(1vw); }
+  to { opacity: 1; transform: translateY(0); }
+}

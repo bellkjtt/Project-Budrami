@@ -4,44 +4,45 @@
 .main-container {
     position: relative;
     display: flex;
-    font-family: 'Roboto', sans-serif; /* Roboto 폰트 적용 */
+    font-family: 'Roboto', sans-serif;
+    padding-right: min(10vw, 100px); /* 오른쪽 여백 추가 */
 }
 
 /* step-tracker를 main-container의 왼쪽에 고정 */
 .main-container .step-tracker {
     position: absolute;
-    left: 8%;
-    top: 75px;
+    left: 6%;
+    top: min(8vh, 80px); /* 상단 위치 감소 */
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 35px;
+    gap: min(4vh, 40px); /* 간격 감소 */
 }
 
 .main-container .step {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: min(2.5vw, 25px); /* 간격 감소 */
     position: relative;
 }
 
 .main-container .circle {
-    width: 40px;
-    height: 40px;
+    width: min(6vw, 60px); /* 원 크기 감소 */
+    height: min(6vw, 60px); /* 원 크기 감소 */
     border-radius: 50%;
     background-color: rgba(170, 162, 149, 1);
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
-    z-index: 1;
-    border: 1px solid rgba(170, 162, 149, 1);
+    z-index: 2;
+    border: min(0.2vw, 2px) solid rgba(170, 162, 149, 1); /* 테두리 두께 감소 */
 }
 
 /* 내부 원 */
 .main-container .inner-circle {
-    width: 20px;
-    height: 20px;
+    width: min(3vw, 30px); /* 내부 원 크기 감소 */
+    height: min(3vw, 30px); /* 내부 원 크기 감소 */
     border-radius: 50%;
     background-color: #fff;
 }
@@ -51,11 +52,12 @@
     background-color: #8B4513;
     border-color: #8B4513;
     color: #fff;
+    font-size: min(3vw, 30px); /* 체크 표시 크기를 반응형으로 설정 */
 }
 
 /* 완료된 원의 라벨 색상 */
 .main-container .completed + .label {
-    color: #8B4513; /* 원의 색상과 일치 */
+    color: #8B4513;
 }
 
 /* 활성화된 원의 애니메이션 효과 */
@@ -74,7 +76,7 @@
 
 /* 활성화된 원의 라벨 색상 */
 .main-container .active + .label {
-    color: #FFA500; /* 활성화된 원의 색상과 일치 */
+    color: #FFA500;
 }
 
 @keyframes rotate {
@@ -86,13 +88,13 @@
 .main-container .circle::after {
     content: "";
     position: absolute;
-    bottom: -35px;
+    bottom: min(-2vh, -45px); /* 연결선 위치 조정 */
     left: 50%;
     transform: translateX(-50%);
-    width: 3px;
-    height: 35px;
+    width: min(0.6vw, 6px); /* 연결선 두께 감소 */
+    height: min(7vh, 50px); /* 연결선 길이 감소 */
     background-color: inherit;
-    z-index: 0;
+    z-index: -2;
 }
 
 .main-container .step:last-child .circle::after {
@@ -100,6 +102,21 @@
 }
 
 .main-container .label {
-    font-size: 1em;
+    font-size: min(3vw, 27px); /* 글자 크기 감소 */
     color: rgba(170, 162, 149, 1);
+    font-weight: 500;
+}
+
+/* 해상도가 768px 이하로 줄어들 경우 */
+@media (max-width: 1600px) {
+
+    /* main-container의 step-tracker 왼쪽 여백 조정 */
+    .main-container .step-tracker {
+        left: 4%; /* 왼쪽 여백 추가 */
+    }
+    
+    /* label의 글자 크기와 간격 조정 */
+    .main-container .label {
+        font-size: 1.5vw; /* 작은 해상도에서 글자 크기 줄이기 */
+    }
 }
