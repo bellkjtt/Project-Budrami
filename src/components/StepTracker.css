@@ -27,8 +27,8 @@
 }
 
 .main-container .circle {
-    width: min(6vw, 60px); /* 원 크기 감소 */
-    height: min(6vw, 60px); /* 원 크기 감소 */
+    width: min(4vw, 40px); /* 원 크기 감소 */
+    height: min(4vw, 40px); /* 원 크기 감소 */
     border-radius: 50%;
     background-color: rgba(170, 162, 149, 1);
     display: flex;
@@ -41,23 +41,23 @@
 
 /* 내부 원 */
 .main-container .inner-circle {
-    width: min(3vw, 30px); /* 내부 원 크기 감소 */
-    height: min(3vw, 30px); /* 내부 원 크기 감소 */
+    width: min(2vw, 20px); /* 내부 원 크기 감소 */
+    height: min(2vw, 20px); /* 내부 원 크기 감소 */
     border-radius: 50%;
     background-color: #fff;
 }
 
 /* 완료된 원 */
 .main-container .completed {
-    background-color: #8B4513;
-    border-color: #8B4513;
+    background-color: #CA891D;
+    border-color: #CA891D;
     color: #fff;
-    font-size: min(3vw, 30px); /* 체크 표시 크기를 반응형으로 설정 */
+    font-size: min(2.4vw, 24px); /* 체크 표시 크기를 반응형으로 설정 */
 }
 
 /* 완료된 원의 라벨 색상 */
 .main-container .completed + .label {
-    color: #8B4513;
+    color: #000000;
 }
 
 /* 활성화된 원의 애니메이션 효과 */
@@ -67,7 +67,7 @@
     width: 110%;
     height: 110%;
     border-radius: 50%;
-    background: linear-gradient(135deg, #FFA500, #FFD700);
+    background: linear-gradient(135deg, #CA891D, #FFD700);
     animation: rotate 2s linear infinite;
     z-index: -1;
     top: -5%;
@@ -76,7 +76,7 @@
 
 /* 활성화된 원의 라벨 색상 */
 .main-container .active + .label {
-    color: #FFA500;
+    color: #CA891D;
 }
 
 @keyframes rotate {
@@ -91,7 +91,7 @@
     bottom: min(-2vh, -45px); /* 연결선 위치 조정 */
     left: 50%;
     transform: translateX(-50%);
-    width: min(0.6vw, 6px); /* 연결선 두께 감소 */
+    width: min(0.3vw, 3px); /* 연결선 두께 감소 */
     height: min(7vh, 50px); /* 연결선 길이 감소 */
     background-color: inherit;
     z-index: -2;
@@ -102,21 +102,86 @@
 }
 
 .main-container .label {
-    font-size: min(3vw, 27px); /* 글자 크기 감소 */
+    font-size: min(1.2vw, 25px); /* 글자 크기 감소 */
     color: rgba(170, 162, 149, 1);
     font-weight: 500;
 }
 
-/* 해상도가 768px 이하로 줄어들 경우 */
-@media (max-width: 1600px) {
 
-    /* main-container의 step-tracker 왼쪽 여백 조정 */
+@media (min-width: 1600px) {
+
+ 
     .main-container .step-tracker {
-        left: 4%; /* 왼쪽 여백 추가 */
+        left: 4%;
     }
     
-    /* label의 글자 크기와 간격 조정 */
+  
     .main-container .label {
-        font-size: 1.5vw; /* 작은 해상도에서 글자 크기 줄이기 */
+        font-size: min(2.7vw, 27px);; 
+    }
+
+    .main-container .completed {
+        background-color: #CA891D;
+        border-color: #CA891D;
+        color: #fff;
+        font-size: min(2.4vw, 24px); /* 체크 표시 크기를 반응형으로 설정 */
+    }
+
+    .main-container .circle {
+        width: min(6vw, 60px); /* 원 크기 감소 */
+        height: min(6vw, 60px); /* 원 크기 감소 */
+        border-radius: 50%;
+        background-color: rgba(170, 162, 149, 1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        z-index: 2;
+        border: min(0.2vw, 2px) solid rgba(170, 162, 149, 1); /* 테두리 두께 감소 */
+    }
+
+    .main-container .completed {
+        background-color: #CA891D;
+        border-color: #CA891D;
+        color: #fff;
+        font-size: min(3.3vw, 33px); /* 체크 표시 크기를 반응형으로 설정 */
+    }
+    
+    .main-container .inner-circle {
+        width: min(2.8vw, 28px); /* 내부 원 크기 감소 */
+        height: min(2.8vw, 28px); /* 내부 원 크기 감소 */
+        border-radius: 50%;
+        background-color: #fff;
+    }
+
+    .main-container .step-tracker {
+        position: absolute;
+        left: 6%;
+        top: min(8vh, 80px); /* 상단 위치 감소 */
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: min(5.6vh, 56px); /* 간격 감소 */
+
+    }
+
+
+    .main-container .circle::after {
+    content: "";
+    position: absolute;
+    bottom: min(-2vh, -60px); /* 연결선 위치 조정 */
+    left: 50%;
+    transform: translateX(-20%);
+    width: min(0.43vw, 4.3px); /* 연결선 두께 감소 */
+    height: min(4.8vh, 100px); /* 연결선 길이 감소 */
+    background-color: inherit;
+    z-index: -2;
+    }
+
+    .main-container .step {
+        display: flex;
+        align-items: center;
+        gap: min(3vw, 30px); /* 간격 감소 */
+        position: relative;
     }
 }
