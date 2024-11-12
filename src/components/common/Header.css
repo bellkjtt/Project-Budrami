@@ -12,3 +12,11 @@
     height: 15vh; /* 로고의 높이를 헤더 높이에 맞추어 조정 */
     width: 53vh;
 }
+
+@media (max-width: 551px) {
+    .header-logo {
+        height: 15vh; /* 로고의 높이를 헤더 높이에 맞추어 조정 */
+        width: 80vw;
+    }
+
+}

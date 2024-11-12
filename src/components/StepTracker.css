@@ -22,13 +22,13 @@
 .main-container .step {
     display: flex;
     align-items: center;
-    gap: min(2.5vw, 25px); /* 간격 감소 */
+    gap: min(2vw, 20px); /* 간격 감소 */
     position: relative;
 }
 
 .main-container .circle {
-    width: min(4vw, 40px); /* 원 크기 감소 */
-    height: min(4vw, 40px); /* 원 크기 감소 */
+    width: min(4.5vw, 45px); /* 원 크기 감소 */
+    height: min(4.5vw, 45px); /* 원 크기 감소 */
     border-radius: 50%;
     background-color: rgba(170, 162, 149, 1);
     display: flex;
@@ -41,8 +41,8 @@
 
 /* 내부 원 */
 .main-container .inner-circle {
-    width: min(2vw, 20px); /* 내부 원 크기 감소 */
-    height: min(2vw, 20px); /* 내부 원 크기 감소 */
+    width: min(2.25vw, 22.5px); /* 내부 원 크기 감소 */
+    height: min(2.25vw, 22.5px); /* 내부 원 크기 감소 */
     border-radius: 50%;
     background-color: #fff;
 }
@@ -102,7 +102,7 @@
 }
 
 .main-container .label {
-    font-size: min(1.2vw, 25px); /* 글자 크기 감소 */
+    font-size: min(1.5vw, 25px); /* 글자 크기 감소 */
     color: rgba(170, 162, 149, 1);
     font-weight: 500;
 }

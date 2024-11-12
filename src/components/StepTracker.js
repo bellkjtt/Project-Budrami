@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import './StepTracker.css';
 
-const stepsData = ["아동기", "청년기", "중년기", "장년기", "노년기"];
+const stepsData = ["유년기", "청년기", "중년기", "장년기"];
 
 const StepTracker = () => {
   const [currentStep, setCurrentStep] = useState(1);

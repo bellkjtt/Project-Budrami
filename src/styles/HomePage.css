@@ -262,7 +262,7 @@
 
     .book-overlay-left {
         position: absolute;
-        top: 41vh; /* Adjust as needed to position '읽으러 가기' over the book */
+        top: 43vh; /* Adjust as needed to position '읽으러 가기' over the book */
         left: 29.5%;
         /* transform: translate(-50%, -50%); */
         color: #fff;
