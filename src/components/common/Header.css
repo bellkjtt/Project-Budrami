@@ -9,6 +9,6 @@
 }
 
 .header-logo {
-    height: 120%; /* 로고의 높이를 헤더 높이에 맞추어 조정 */
-    width: 120%;
+    height: 15vh; /* 로고의 높이를 헤더 높이에 맞추어 조정 */
+    width: 53vh;
 }
