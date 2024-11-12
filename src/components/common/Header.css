@@ -5,7 +5,7 @@
     align-items: center;
     background-color: var(--secondary-color);
     padding: 0 22px;
-    z-index: 2;
+    z-index: 10;
 }
 
 .header-logo {

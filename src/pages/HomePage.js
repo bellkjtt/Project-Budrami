@@ -48,7 +48,7 @@ const HomePage = () => {
             />
             <div className="book-overlay-left">
               <h3 className="book-title"></h3>
-              <Link to="/chat" className="book-link">
+              <Link to="/gallary" className="book-link">
                 <span>읽으러 가기</span>
                 <Arrow />
               </Link>

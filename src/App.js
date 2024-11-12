@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-route
 import { TransitionGroup, Transition } from 'react-transition-group';
 import ChatPage from './pages/ChatPage';
 import HomePage from './pages/HomePage';
+import GallaryPage from './pages/GallaryPage';
 import Header from './components/common/Header';
 
 const TIMEOUT = 300;
@@ -50,6 +51,7 @@ function AnimatedRoutes() {
               <Routes location={location}>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/chat" element={<ChatPage />} />
+                <Route path="/gallary" element={<GallaryPage />} />
               </Routes>
             </div>
           )}
