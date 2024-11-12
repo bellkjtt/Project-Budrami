@@ -1,26 +1,34 @@
 .back-container {
-    min-height: 100vh;
-    /* background-color: rgba(43, 24, 16, 0.9); */
-    padding: 3rem 1rem;
-    overflow: auto; /* 상하, 좌우 스크롤바가 자동 생성 */
-  }
+  /* min-height 대신 height를 사용하여 고정 높이 설정 */
+  height: 75vh;
+  padding: 3rem 1rem;
+  overflow-y: auto; /* 세로 스크롤만 필요하므로 overflow-y만 설정 */
+  position: relative;
+  z-index: 0;
+  /* 컨테이너가 내용물을 포함하도록 설정 */
+  display: flex;
+  flex-direction: column;
+}
   
-  .background-image {
-    position: absolute;
-    inset: 0;
-    z-index: 10;
-    background-image: url('../images/gallary_background.png');
-    background-size: cover;
-    background-position: center;
-    /* opacity: 0.2; */
-  }
+
+.background-image {
+  position: fixed; /* absolute 대신 fixed 사용하여 스크롤 시에도 배경 고정 */
+  inset: 0;
+  z-index: -1;
+  background-image: url('../images/gallary_background.png');
+  background-size: cover;
+  background-position: center;
+}
   
-  .content-container {
-    position: relative;
-    z-index: 10;
-    max-width: 80%;
-    margin: 0 auto;
-  }
+.card-container {
+  position: relative;
+  background-color: white;
+  border-radius: 2.5rem;
+  box-shadow: 0px 10px 15px rgba(0, 0, 0, 0.1);
+  transition: transform 0.05s;
+  overflow: hidden; /* auto 대신 hidden 사용 */
+  aspect-ratio: 3/4; /* 카드의 비율 설정 */
+}
   
   /* .header {
     text-align: center;
@@ -39,11 +47,12 @@
     color: rgba(255, 255, 255, 0.7);
   } */
 
-  .card-image img {
+  .card-image {
     width: 100%;
     height: 100%;
-    object-fit: cover; /* 이미지가 카드에 꽉 차도록 */
+    position: relative; /* 이미지 컨테이너에 position 추가 */
   }
+  
   
   
   .cards-grid {
@@ -67,20 +76,21 @@
   .card-container {
     position: relative;
     background-color: white;
-    border-radius: 0.5rem;
+    border-radius: 2.5rem;
     box-shadow: 0px 10px 15px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s;
-    overflow: hidden; /* 이미지를 잘라서 hover-overlay와 일치시킴 */
+    transition: transform 0.05s;
+    overflow: auto; /* 이미지를 잘라서 hover-overlay와 일치시킴 */
   }
   
   .card-container:hover {
-    transform: scale(1.05);
+    transform: scale(1.1);
   }
   
   .card-image img {
     width: 100%;
     height: 100%;
-    object-fit: cover; /* 이미지가 카드에 꽉 차도록 */
+    object-fit: cover;
+    display: block; /* 이미지 하단 여백 제거 */
   }
   
   
