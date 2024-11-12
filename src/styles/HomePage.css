@@ -169,7 +169,7 @@
 
 
 .book-link span {
-    font-size: clamp(12px, 2.3vw, 16px);  /* 클램프를 사용하여 반응형 글자 크기 조정 */
+    font-size: clamp(20px, 2.3vw, 20px);  /* 클램프를 사용하여 반응형 글자 크기 조정 */
     font-weight: 400;
     color: #000;  /* 글자 색을 검정으로 설정 */
     font-family: 'Inter', sans-serif;  /* Inter 폰트 적용 */
@@ -263,7 +263,7 @@
     .book-overlay-left {
         position: absolute;
         top: 43vh; /* Adjust as needed to position '읽으러 가기' over the book */
-        left: 29.5%;
+        left: 29%;
         /* transform: translate(-50%, -50%); */
         color: #fff;
         text-align: center;
