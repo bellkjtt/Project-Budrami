@@ -5,7 +5,7 @@ import './StepTracker.css';
 const stepsData = ["유년기", "청년기", "중년기", "장년기"];
 
 const StepTracker = () => {
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(2);
 
   return (
     <div className="step-tracker">
