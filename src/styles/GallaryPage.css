@@ -1,0 +1,124 @@
+.back-container {
+    min-height: 100vh;
+    /* background-color: rgba(43, 24, 16, 0.9); */
+    padding: 3rem 1rem;
+    overflow: auto; /* 상하, 좌우 스크롤바가 자동 생성 */
+  }
+  
+  .background-image {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    background-image: url('../images/gallary_background.png');
+    background-size: cover;
+    background-position: center;
+    /* opacity: 0.2; */
+  }
+  
+  .content-container {
+    position: relative;
+    z-index: 10;
+    max-width: 80%;
+    margin: 0 auto;
+  }
+  
+  /* .header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+  
+  .header h1 {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: white;
+    margin-bottom: 1rem;
+  }
+  
+  .header p {
+    font-size: 1.125rem;
+    color: rgba(255, 255, 255, 0.7);
+  } */
+
+  .card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* 이미지가 카드에 꽉 차도록 */
+  }
+  
+  
+  .cards-grid {
+    display: grid;
+    gap: 2rem;
+    grid-template-columns: repeat(1, 1fr);
+  }
+  
+  @media (min-width: 768px) {
+    .cards-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .cards-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  
+  .card-container {
+    position: relative;
+    background-color: white;
+    border-radius: 0.5rem;
+    box-shadow: 0px 10px 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s;
+    overflow: hidden; /* 이미지를 잘라서 hover-overlay와 일치시킴 */
+  }
+  
+  .card-container:hover {
+    transform: scale(1.05);
+  }
+  
+  .card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* 이미지가 카드에 꽉 차도록 */
+  }
+  
+  
+  .card-content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 1.5rem;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.3) 100%);
+  }
+  
+  .card-content h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 0.5rem;
+  }
+  
+  .card-content p {
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-style: italic;
+  }
+  
+  .hover-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: black;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none; /* 마우스 이벤트를 차단하여 이미지 클릭에 영향 없음 */
+  }
+  
+  .card-container:hover .hover-overlay {
+    opacity: 0.1; /* 마우스 오버 시 overlay가 드러남 */
+  }
+  
