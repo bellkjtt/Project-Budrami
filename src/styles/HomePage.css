@@ -114,9 +114,9 @@
 /* Book Overlay */
 .book-overlay-left {
     position: absolute;
-    top: 76%; /* Adjust as needed to position '읽으러 가기' over the book */
-    left: 39%;
-    transform: translate(-50%, -50%);
+    top: 65%; /* Adjust as needed to position '읽으러 가기' over the book */
+    left: 30%;
+    /* transform: translate(-50%, -50%); */
     color: #fff;
     text-align: center;
     width: auto;
@@ -125,9 +125,9 @@
 
 .book-overlay-right {
     position: absolute;
-    top: 35%; /* Adjust as needed to position '읽으러 가기' over the book */
-    right: 25%;
-    transform: translate(-50%, -50%);
+    top: 30%; /* Adjust as needed to position '읽으러 가기' over the book */
+    right: 36.5%;
+    /* transform: translate(-50%, -50%); */
     color: #fff;
     text-align: center;
     width: auto;
@@ -165,45 +165,7 @@
     transform: translateY(-2px);
 }
 
-/* Responsive Design */
-@media (max-aspect-ratio: 1/1) {
-    .home-main {
-        padding: 4vw;
-        height: auto;
-        min-height: calc(100vh - 80px);
-    }
 
-    .title-section {
-        position: relative;
-        left: 0;
-        top: 0;
-        margin-bottom: 4vh;
-        max-width: 100%;
-    }
-
-    .books-section {
-        display: flex;
-        flex-direction: column;
-        gap: 4vh;
-    }
-/* 
-    .left-book-container,
-    .right-book-container {
-        position: relative;
-        left: 0;
-        right: 0;
-        top: 0;
-        margin: 0 auto;
-    } */
-
-    /* .left-book,
-    .right-book {
-        width: 100vw;
-        max-width: 700px;
-        margin: 0 auto;
-        display: block;
-    } */
-}
 
 .book-link span {
     font-size: clamp(12px, 2.3vw, 16px);  /* 클램프를 사용하여 반응형 글자 크기 조정 */
