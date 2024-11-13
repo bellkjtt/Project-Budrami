@@ -16,7 +16,7 @@ function getCookie(name) {
   return cookieValue;
 }
 
-const useSpeechRecognition = (addMessage, setIsLoading) => {
+const useSpeechRecognition = (addMessage, setIsLoading, currentStep, setCurrentStep) => {
   const [isListening, setIsListening] = useState(false);
   const [interimTranscript, setInterimTranscript] = useState('');
   const [finalTranscript, setFinalTranscript] = useState('');
@@ -26,10 +26,13 @@ const useSpeechRecognition = (addMessage, setIsLoading) => {
   const currentAudioRef = useRef(null);
   const socketRef = useRef(null);  // WebSocket을 저장할 ref
 
+  useEffect(() => {
+    console.log("Updated currentStep_recogPage:", currentStep);
+  }, [currentStep]);
 
   // WebSocket 초기화 및 설정
   useEffect(() => {
-    socketRef.current = new WebSocket('ws://127.0.0.1:3389/ws/speech/');
+    socketRef.current = new WebSocket('ws://127.0.0.1:3002/');
 
     socketRef.current.onopen = () => {
       console.log("WebSocket connection opened.");
@@ -143,7 +146,9 @@ const useSpeechRecognition = (addMessage, setIsLoading) => {
 
 
   // 백엔드 통신 함수
-  const sendToBackend = useCallback(async (transcript) => {
+  const sendToBackend = useCallback(async (transcript) => { // 최신 currentStep 값 참조
+    console.log(currentStep,'안쪽')
+    
     stopCurrentAudio();
     try {
       console.time("tts2");
@@ -153,7 +158,7 @@ const useSpeechRecognition = (addMessage, setIsLoading) => {
           'Content-Type': 'application/json',
           'X-CSRFToken': getCookie('csrftoken')
         },
-        body: JSON.stringify({ text: transcript }),
+        body: JSON.stringify({ text: transcript, step: currentStep }),
       });
 
       if (!response.ok) {
@@ -163,8 +168,15 @@ const useSpeechRecognition = (addMessage, setIsLoading) => {
       const data = await response.json();
       console.log('Response from backend:', data);
 
+      const stepFromHeader = response.headers.get('Step'); // 헤더에서 step 값 가져오기
+
+      if (stepFromHeader) {
+        setCurrentStep(stepFromHeader); // 상태 업데이트
+      }
+
+
       // if (data.response) {
-        await speakResponse(data.response);
+      await speakResponse(data.response);
       //   addMessage('bot', data.response);
       // }
     } catch (error) {

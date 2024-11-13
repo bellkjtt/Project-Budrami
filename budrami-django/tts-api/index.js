@@ -4,7 +4,7 @@ const { WebSocketServer } = require('ws'); // 웹소켓 서버를 추가
 require('dotenv').config();
 
 const app = express();
-const port = process.env.PORT || 3389;
+const port = process.env.PORT || 3002;
 const BASE_PATH = process.env.BASE_PATH || '/api/tts';
 
 app.use(cors());
@@ -44,8 +44,8 @@ app.post('/api/tts', async (req, res) => {
     }
 });
 
-// Express 서버를 시작
-const server = app.listen(port, () => {
+// Express 서버를 시작할 때, 모든 네트워크 인터페이스에서 연결을 받도록 설정
+const server = app.listen(port, '0.0.0.0', () => {  // '0.0.0.0'로 바인딩
     console.log(`Local Edge Function server running on port ${port}`);
     console.log(`TTS endpoint available at ${BASE_PATH}`);
 });
