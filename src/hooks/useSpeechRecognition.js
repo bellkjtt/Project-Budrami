@@ -145,6 +145,10 @@ const useSpeechRecognition = (addMessage, setIsLoading, currentStep, setCurrentS
   }, [stopCurrentAudio, addMessage]);
 
 
+  useEffect(() => {
+    console.log("Updated currentStep after response:", currentStep);
+  }, [currentStep]);
+
   // 백엔드 통신 함수
   const sendToBackend = useCallback(async (transcript) => { // 최신 currentStep 값 참조
     console.log(currentStep,'안쪽')
@@ -168,13 +172,13 @@ const useSpeechRecognition = (addMessage, setIsLoading, currentStep, setCurrentS
       const data = await response.json();
       console.log('Response from backend:', data);
 
-      const stepFromHeader = response.headers.get('Step'); // 헤더에서 step 값 가져오기
-
+      const stepFromHeader = data.step; // 헤더에서 step 값 가져오기
+      console.log(stepFromHeader,'받은 스텝')
       if (stepFromHeader) {
         setCurrentStep(stepFromHeader); // 상태 업데이트
       }
 
-
+      console.log(currentStep,'받은 후')
       // if (data.response) {
       await speakResponse(data.response);
       //   addMessage('bot', data.response);
@@ -184,7 +188,7 @@ const useSpeechRecognition = (addMessage, setIsLoading, currentStep, setCurrentS
       addMessage('bot', '죄송합니다. 오류가 발생했습니다.');
       stopListening();
     }
-  }, [speakResponse, addMessage]);
+  }, [speakResponse, addMessage, currentStep]);
 
   useEffect(() => {
     if ('webkitSpeechRecognition' in window) {

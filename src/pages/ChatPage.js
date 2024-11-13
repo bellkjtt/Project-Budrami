@@ -11,11 +11,16 @@ function ChatPAge() {
   const [messages, setMessages] = useState([]);
   const [audioContext, setAudioContext] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-
+  const [currentStep, setCurrentStep] = useState(0);
 
   const addMessage = useCallback((sender, text) => {
     setMessages(prevMessages => [...prevMessages, { sender, text }]);
   }, []);
+
+  useEffect(() => {
+    console.log("Updated currentStep_chatPage:", currentStep);
+  }, [currentStep]);
+
 
   const {
     isListening,
@@ -24,7 +29,11 @@ function ChatPAge() {
     startListening,
     stopListening,
     sendToBackend
-  } = useSpeechRecognition(addMessage, setIsLoading);
+  } = useSpeechRecognition(addMessage, setIsLoading, currentStep, setCurrentStep);
+
+  const handleStepChange = (step) => {
+    setCurrentStep(step); // 최신 step 값 업데이트
+  };
 
   useEffect(() => {
     const resetCount = async () => {
@@ -83,7 +92,7 @@ function ChatPAge() {
     <div className="main-container">
       {/* <Header /> */}
       <main className="main-content">
-        <StepTracker />
+      <StepTracker setCurrentStep={setCurrentStep} currentStep={currentStep} />
         <div className="chat-wrapper">
           <Camera />
           <div className="chat-section">
@@ -103,5 +112,7 @@ function ChatPAge() {
 }
 
 export default ChatPAge;
+
+
 
 
