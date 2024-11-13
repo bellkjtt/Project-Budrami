@@ -11,6 +11,8 @@ django = "^5.1.2"
 langchain = "^0.3.4"
 langchain-openai = "^0.2.3"
 langchain-community = "^0.3.3"
+django-cors-headers = "^4.6.0"
+channels = "^4.1.0"
 
 
 [build-system]

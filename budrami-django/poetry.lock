@@ -212,6 +212,25 @@ files = [
 ]
 
 [[package]]
+name = "channels"
+version = "4.1.0"
+description = "Brings async, event-driven capabilities to Django 3.2 and up."
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "channels-4.1.0-py3-none-any.whl", hash = "sha256:a3c4419307f582c3f71d67bfb6eff748ae819c2f360b9b141694d84f242baa48"},
+    {file = "channels-4.1.0.tar.gz", hash = "sha256:e0ed375719f5c1851861f05ed4ce78b0166f9245ca0ecd836cb77d4bb531489d"},
+]
+
+[package.dependencies]
+asgiref = ">=3.6.0,<4"
+Django = ">=4.2"
+
+[package.extras]
+daphne = ["daphne (>=4.0.0)"]
+tests = ["async-timeout", "coverage (>=4.5,<5.0)", "pytest", "pytest-asyncio", "pytest-django"]
+
+[[package]]
 name = "charset-normalizer"
 version = "3.4.0"
 description = "The Real First Universal Charset Detector. Open, modern and actively maintained alternative to Chardet."
@@ -381,6 +400,21 @@ tzdata = {version = "*", markers = "sys_platform == \"win32\""}
 [package.extras]
 argon2 = ["argon2-cffi (>=19.1.0)"]
 bcrypt = ["bcrypt"]
+
+[[package]]
+name = "django-cors-headers"
+version = "4.6.0"
+description = "django-cors-headers is a Django application for handling the server headers required for Cross-Origin Resource Sharing (CORS)."
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "django_cors_headers-4.6.0-py3-none-any.whl", hash = "sha256:8edbc0497e611c24d5150e0055d3b178c6534b8ed826fb6f53b21c63f5d48ba3"},
+    {file = "django_cors_headers-4.6.0.tar.gz", hash = "sha256:14d76b4b4c8d39375baeddd89e4f08899051eeaf177cb02a29bd6eae8cf63aa8"},
+]
+
+[package.dependencies]
+asgiref = ">=3.6"
+django = ">=4.2"
 
 [[package]]
 name = "frozenlist"
@@ -1943,4 +1977,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "3.11.1"
-content-hash = "68e4f5e3e0383bf3c29a07d10d0df2c790d07a65e70554fd7308d5f9f3d16254"
+content-hash = "c659093a7e410e104b301c40c788e8622c727a72683e76229b9a2aeb332d9f9c"
