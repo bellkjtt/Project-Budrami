@@ -88,11 +88,11 @@
 .main-container .circle::after {
     content: "";
     position: absolute;
-    bottom: min(-2vh, -45px); /* 연결선 위치 조정 */
+    bottom: min(-2vh, -50px); /* 연결선 위치 조정 */
     left: 50%;
-    transform: translateX(-50%);
+    /* transform: translateX(-50%); */
     width: min(0.3vw, 3px); /* 연결선 두께 감소 */
-    height: min(7vh, 50px); /* 연결선 길이 감소 */
+    height: min(70vh, 100px); /* 연결선 길이 감소 */
     background-color: inherit;
     z-index: -2;
 }
@@ -106,6 +106,38 @@
     color: rgba(170, 162, 149, 1);
     font-weight: 500;
 }
+
+/* 자서전 생성 버튼 스타일 */
+.main-container .autobiography-button {
+    margin-top: min(6vh, 0px); /* 원과 버튼 사이의 여백 설정 */
+    padding: min(1.5vh, 15px) min(4vw, 40px); /* 버튼의 패딩 증가 */
+    font-size: min(1.8vw, 18px);
+    margin-left : -60px;
+    text-align: left;
+    font-weight: bold;
+    color: white;
+    background: linear-gradient(135deg, #CA891D, #FFD700); /* 그라데이션 배경 */
+    border: none;
+    border-radius: 50px; /* 둥근 모서리 */
+    cursor: pointer;
+    transition: all 0.3s ease; /* 모든 속성에 대한 전환 효과 */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* 그림자 효과 */
+    text-transform: uppercase; /* 대문자 변환 */
+    letter-spacing: 1px; /* 자간 설정 */
+    z-index : 2;
+    
+  }
+  .main-container .autobiography-button:hover {
+  background: linear-gradient(135deg, `#b07b19`, `#E6C200`); /* 호버 시 그라데이션 변경 */
+  transform: translateY(-10px); /* 살짝 위로 이동 */
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15); /* 그림자 강화 */
+  }
+  
+  /* 버튼 활성화(클릭) 효과 */
+  .main-container .autobiography-button:active {
+  transform: translateY(1px); /* 살짝 아래로 이동 */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* 그림자 약화 */
+  }
 
 
 @media (min-width: 1600px) {
@@ -173,7 +205,7 @@
     left: 50%;
     transform: translateX(-20%);
     width: min(0.43vw, 4.3px); /* 연결선 두께 감소 */
-    height: min(4.8vh, 100px); /* 연결선 길이 감소 */
+    height: min(70vh, 100px); /* 연결선 길이 감소 */
     background-color: inherit;
     z-index: -2;
     }
@@ -184,33 +216,5 @@
         gap: min(3vw, 30px); /* 간격 감소 */
         position: relative;
     }
-
-/* 자서전 생성 버튼 스타일 */
-.main-container .autobiography-button {
-    margin-top: min(6vh, 60px); /* 원과 버튼 사이의 여백 설정 */
-    padding: min(1.5vh, 15px) min(4vw, 40px); /* 버튼의 패딩 증가 */
-    font-size: min(1.8vw, 18px);
-    font-weight: bold;
-    color: white;
-    background: linear-gradient(135deg, #CA891D, #FFD700); /* 그라데이션 배경 */
-    border: none;
-    border-radius: 50px; /* 둥근 모서리 */
-    cursor: pointer;
-    transition: all 0.3s ease; /* 모든 속성에 대한 전환 효과 */
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* 그림자 효과 */
-    text-transform: uppercase; /* 대문자 변환 */
-    letter-spacing: 1px; /* 자간 설정 */
-  }`/* 버튼 호버 효과 */
-  .main-container .autobiography-button:hover {
-  background: linear-gradient(135deg, `#b07b19`, `#E6C200`); /* 호버 시 그라데이션 변경 */
-  transform: translateY(-2px); /* 살짝 위로 이동 */
-  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15); /* 그림자 강화 */
-  }
-  
-  /* 버튼 활성화(클릭) 효과 */
-  .main-container .autobiography-button:active {
-  transform: translateY(1px); /* 살짝 아래로 이동 */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* 그림자 약화 */
-  }
 
 }
