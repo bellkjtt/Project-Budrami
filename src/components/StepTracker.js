@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './StepTracker.css';
+import AutobiographyButton from './AutobiographyButton';
 
 const stepsData = ["유년기", "청년기", "중년기", "장년기"];
 
@@ -23,11 +24,6 @@ const StepTracker = ({ setCurrentStep, currentStep }) => {
           onClick={() => handleStepClick(index)}
         />
       ))}
-
-      {/* Step 값이 4 이상일 때만 자서전 생성 버튼 렌더링 */}
-      {currentStep >= 4 && (
-        <button className="autobiography-button">나의 이야기 만들기</button>
-      )}
     </div>
   );
 };

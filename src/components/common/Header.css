@@ -11,7 +11,18 @@
 .header-logo {
     height: 15vh; /* 로고의 높이를 헤더 높이에 맞추어 조정 */
     width: 53vh;
+
+  
+ 
+  
 }
+
+.user-icon {
+    width: 63px; /* 크기를 2배로 키웁니다 */
+    height: 63px;
+    margin-left: auto; /* 오른쪽 끝으로 배치 */
+    margin-right: 20px; /* 아이콘을 왼쪽으로 이동 */
+  }
 
 @media (max-width: 551px) {
     .header-logo {
