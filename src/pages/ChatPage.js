@@ -6,13 +6,14 @@ import StepTracker from '../components/StepTracker';
 // import Header from '../components/common/Header';
 import ChatContainer from '../components/ChatContainer';
 import useSpeechRecognition from '../hooks/useSpeechRecognition';
+import AutobiographyButton from '../components/AutobiographyButton';
 import ChatHeader from '../components/common/ChatHeader'; // Import the custom header
 
 function ChatPAge() {
   const [messages, setMessages] = useState([]);
   const [audioContext, setAudioContext] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState(4);
 
   const addMessage = useCallback((sender, text) => {
     setMessages(prevMessages => [...prevMessages, { sender, text }]);
@@ -93,6 +94,7 @@ function ChatPAge() {
     <div className="main-container">
       <main className="main-content">
       <StepTracker setCurrentStep={setCurrentStep} currentStep={currentStep} />
+      {currentStep >= 4 && <AutobiographyButton />}
         <div className="chat-wrapper">
           <Camera />
           <div className="chat-section">
