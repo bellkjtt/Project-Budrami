@@ -1,0 +1,12 @@
+/* Header.css */
+.chat-header {
+    display: flex;
+    align-items: center;
+  }
+  
+  .user-icon {
+    width: 40px; /* Adjust size as needed */
+    height: 40px;
+    margin-right: 10px; /* Spacing between icon and title */
+  }
+  

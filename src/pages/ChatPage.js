@@ -6,6 +6,7 @@ import StepTracker from '../components/StepTracker';
 // import Header from '../components/common/Header';
 import ChatContainer from '../components/ChatContainer';
 import useSpeechRecognition from '../hooks/useSpeechRecognition';
+import ChatHeader from '../components/common/ChatHeader'; // Import the custom header
 
 function ChatPAge() {
   const [messages, setMessages] = useState([]);
@@ -90,7 +91,6 @@ function ChatPAge() {
 
   return (
     <div className="main-container">
-      {/* <Header /> */}
       <main className="main-content">
       <StepTracker setCurrentStep={setCurrentStep} currentStep={currentStep} />
         <div className="chat-wrapper">
