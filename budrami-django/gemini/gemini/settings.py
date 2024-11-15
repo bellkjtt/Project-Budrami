@@ -61,6 +61,10 @@ MIDDLEWARE = [
 CORS_ALLOW_ALL_ORIGINS = True  # 또는 CORS_ALLOWED_ORIGINS = ['http://localhost:3000']
 ROOT_URLCONF = "gemini.urls"
 
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+]
+
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",

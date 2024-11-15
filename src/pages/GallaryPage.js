@@ -3,11 +3,13 @@ import image1 from '../images/image 1.png';
 import image2 from '../images/image 2.png';
 import image3 from '../images/image 3.png';
 
-
 import { motion } from "framer-motion";
+import { useNavigate } from 'react-router-dom'; // React Router의 useNavigate 훅 사용
 import "../styles/GallaryPage.css";
 
 export default function Component() {
+  const navigate = useNavigate();
+
   const cards = [
     {
       id: 1,
@@ -34,11 +36,6 @@ export default function Component() {
       <div className="background-image" />
       
       <div className="content-container">
-        {/* <div>
-          <h1>자서전 아카이브</h1>
-          <p>소중한 순간들을 기록하세요</p>
-        </div> */}
-
         <div className="cards-grid">
           {cards.map((card) => (
             <motion.div
@@ -49,6 +46,7 @@ export default function Component() {
               transition={{ duration: 0.5, delay: card.id * 0.2 }}
               whileHover={{ y: -5 }}
               whileTap={{ scale: 0.95 }}
+              onClick={() => navigate('/book')} // 카드 클릭 시 /book 페이지로 이동
             >
               <div className="card-image">
                 <img
