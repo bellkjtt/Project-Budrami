@@ -5,6 +5,7 @@ import ChatPage from './pages/ChatPage';
 import HomePage from './pages/HomePage';
 import GallaryPage from './pages/GallaryPage';
 import Header from './components/common/Header';
+import Frame2 from './components/Frame2/Frame2';
 
 const TIMEOUT = 300;
 
@@ -52,6 +53,7 @@ function AnimatedRoutes() {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/chat" element={<ChatPage />} />
                 <Route path="/gallary" element={<GallaryPage />} />
+                <Route path="/book" element={<Frame2 />} />
               </Routes>
             </div>
           )}
