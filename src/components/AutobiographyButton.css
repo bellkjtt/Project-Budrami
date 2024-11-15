@@ -37,10 +37,10 @@
 /* 1600px 이하일 때 스타일 */
 @media (max-width: 1600px) {
     .autobiography-button {
-        top: min(50vh, 500px); /* 화면 상단에서 50% 위치, 최대 500px */
+        top: min(55vh, 550px); /* 화면 상단에서 50% 위치, 최대 500px */
         left: 6.5%;
         font-size: 20px; /* 글자 크기 25px로 설정 */
-        padding: 14px 18px; /* 패딩을 조금 줄임 */
-        height: 81px; /* 버튼 높이 설정 (1600px 이하 화면 크기) */
+        padding: 10px 18px; /* 패딩을 조금 줄임 */
+        height: 60px; /* 버튼 높이 설정 (1600px 이하 화면 크기) */
     }
 }
