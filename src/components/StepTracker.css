@@ -92,7 +92,7 @@
     left: 50%;
     /* transform: translateX(-50%); */
     width: min(0.3vw, 3px); /* 연결선 두께 감소 */
-    height: min(70vh, 100px); /* 연결선 길이 감소 */
+    height: min(70vh, 70px); /* 연결선 길이 감소 */
     background-color: inherit;
     z-index: -2;
 }
