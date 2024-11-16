@@ -86,6 +86,7 @@ function ChatPage({onAddCard}) {
 
   useEffect(() => {
     if (finalTranscript) {
+      setIsLoading(true);
       addMessage('user', finalTranscript);
     }
   }, [finalTranscript, addMessage]);
