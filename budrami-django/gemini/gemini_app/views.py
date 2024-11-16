@@ -220,7 +220,7 @@ def process_speech(request):
                 data = json.loads(request.body)
                 user_text = data.get('text', '')
                 session_id = data.get('session_id', 'default_session')
-                role_num = data.get('step', 1)
+                role_num = data.get('step', 3)
 
             except json.JSONDecodeError:
                 return JsonResponse({'error': 'Invalid JSON'}, status=400)
