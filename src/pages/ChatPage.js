@@ -9,7 +9,7 @@ import useSpeechRecognition from '../hooks/useSpeechRecognition';
 import AutobiographyButton from '../components/AutobiographyButton';
 import ChatHeader from '../components/common/ChatHeader'; // Import the custom header
 
-function ChatPAge() {
+function ChatPage({onAddCard}) {
   const [messages, setMessages] = useState([]);
   const [audioContext, setAudioContext] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -94,7 +94,7 @@ function ChatPAge() {
     <div className="main-container">
       <main className="main-content">
       <StepTracker setCurrentStep={setCurrentStep} currentStep={currentStep} />
-      {currentStep >= 4 && <AutobiographyButton />}
+      {currentStep >= 4 && <AutobiographyButton onAddCard={onAddCard} />}
         <div className="chat-wrapper">
           <Camera />
           <div className="chat-section">
@@ -113,7 +113,7 @@ function ChatPAge() {
   );
 }
 
-export default ChatPAge;
+export default ChatPage;
 
 
 

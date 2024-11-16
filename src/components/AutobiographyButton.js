@@ -1,28 +1,29 @@
-// AutobiographyButton.js
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom'; // useNavigate 추가
 import './AutobiographyButton.css';
+import image from '../images/gemini_logo_color.jpg';
 
-const AutobiographyButton = () => {
-  const navigate = useNavigate();
+const AutobiographyButton = ({ onAddCard }) => {
+  const navigate = useNavigate(); // navigate 훅 생성
+
+  console.log('onAddCard:', typeof onAddCard, onAddCard); // 디버그
 
   const handleClick = async () => {
     try {
-      // 대화 데이터를 저장하는 Django API 호출
       const response = await fetch('http://127.0.0.1:8000/save_conversation/', {
         method: 'POST',
-        credentials: 'include',  // 세션 쿠키 포함 설정
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        // credentials: 'same-origin', // 세션 쿠키를 포함하여 요청 보냄
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
       });
-      console.log(response,'받은 에러')
+
       if (!response.ok) {
         throw new Error('Failed to save conversation.');
       }
 
-      // 성공 시 '/gallary' 페이지로 이동
+      const newCard = { id: 4, title: "새로운 이야기", subtitle: "추가된 카드입니다.", image: image };
+      onAddCard(newCard); // 카드 추가
+
+      // 갤러리 페이지로 이동
       navigate('/gallary');
     } catch (error) {
       console.error('Error saving conversation:', error);
