@@ -13,6 +13,10 @@ from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.tools import tool
 from typing import List
 from dotenv import load_dotenv
+from .models import Dialog
+from django.db import transaction
+from langchain.schema import HumanMessage, AIMessage
+
 
 # 환경 변수 로드 (.env 파일에서 설정값을 가져옴)
 load_dotenv()
@@ -122,10 +126,9 @@ prompt = ChatPromptTemplate.from_messages(
     ]
 )
 
-
 # LLM(Language Model) 초기화
 # GPT-4를 사용하며, temperature를 0.2로 설정하여 일관된 응답 유도
-llm = ChatOpenAI(model='gpt-4o', temperature=0.2)
+llm = ChatOpenAI(model='gpt-4o-mini', temperature=0.2)
 chain = prompt | llm | StrOutputParser()
 # 세션 저장소 초기화
 store = {}
@@ -148,6 +151,51 @@ chain_with_history = RunnableWithMessageHistory(
 def index(request):
     request.session['count'] = 0  # 세션에 count 저장
     return render(request, 'index.html')
+
+
+
+
+# store에서 대화 기록 가져오기
+def get_dialogues_from_store(session_id):
+    if session_id in store:
+        # store[session_id]가 ChatMessageHistory 객체라 가정하고 messages를 가져옴
+        return store[session_id].messages
+    else:
+        # 세션 ID가 없으면 빈 리스트 반환
+        return []
+
+
+@csrf_exempt
+def save_dialogues(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST 요청만 허용됩니다.'}, status=405)
+
+    # 세션 ID 가져오기 (기본값 'default_session')
+    session_id = request.session.get('session_id', 'default_session')
+
+    # store에서 대화 기록 가져오기
+    dialogues = get_dialogues_from_store(session_id)
+    if not dialogues:
+        return JsonResponse({'message': '저장할 대화가 없습니다.'}, status=400)
+
+    try:
+        with transaction.atomic():
+            # DB에 대화 기록 저장
+            for dialogue in dialogues:
+                # HumanMessage와 AIMessage에 따라 message_type 설정
+                message_type = 'human' if isinstance(dialogue, HumanMessage) else 'ai'
+
+                Dialog.objects.create(
+                    session_id=session_id,
+                    content=dialogue.content,  # 메시지 내용 저장
+                    message_type=message_type  # 메시지 유형 저장
+                )
+        
+        return JsonResponse({'message': '대화가 성공적으로 저장되었습니다.'})
+    except Exception as e:
+        return JsonResponse({'error': f'저장 중 오류 발생: {str(e)}'}, status=500)
+
+
 
 # 음성 처리 및 응답 생성 뷰
 @csrf_exempt
@@ -202,6 +250,7 @@ def process_speech(request):
             response = result
             count += 1
             request.session['count'] = count  # 세션에 count 업데이트
+            print(store)
             return JsonResponse({'response': response})
 
         except Exception as e:
