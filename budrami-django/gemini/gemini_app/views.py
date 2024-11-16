@@ -263,6 +263,9 @@ def process_speech(request):
             count += 1
             request.session['count'] = count  # 세션에 count 업데이트
             print(store)
+            print(selected_role)
+            if role_num==3:
+                return JsonResponse({'response': response, 'step' : 4})
             return JsonResponse({'response': response})
 
         except Exception as e:
