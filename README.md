@@ -1,3 +1,14 @@
+# 2024-11-16 업데이트 된 중요사항
+## DB, models.py가 업데이트 됨에 따라
+
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
+
+## 한번 해주셔야 합니다.
+
+
 #사용방법
 
 budrami-django는 똑같습니다. gemini 들어가서 바꾸면 됩니다.
