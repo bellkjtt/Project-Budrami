@@ -79,7 +79,7 @@
     right: -2vw;
     top: -20vh;
     /* top 위치를 5vh로 줄여서 header 바로 아래로 이동 */
-    z-index: 0;
+    z-index: 1;
     padding-right: 6%;
     /* z-index를 조정하여 다른 요소 위로 표시 */
 }
@@ -250,7 +250,7 @@
         right: -4vw;
         top: 25vh;
         /* top 위치를 5vh로 줄여서 header 바로 아래로 이동 */
-        z-index: 0;
+        z-index: 2;
         padding-right: 6%;
         /* z-index를 조정하여 다른 요소 위로 표시 */
     }
@@ -261,7 +261,7 @@
         left: -5vw;
         /* top: %; */
         bottom: 4%;
-        z-index: 0;
+        z-index: -1;
     }
 
 
@@ -443,7 +443,7 @@
             position: absolute;
             left: -5vw;
             bottom : 80px;
-            z-index: 0;
+            z-index: -1;
         }
     
 /*     
