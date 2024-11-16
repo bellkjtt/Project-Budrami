@@ -40,7 +40,7 @@ function ChatPage({onAddCard}) {
   useEffect(() => {
     const resetCount = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:8000/reset_count', {
+        const response = await fetch('http://127.0.0.1:8000/reset_count/', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'

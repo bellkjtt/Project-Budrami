@@ -150,7 +150,19 @@ chain_with_history = RunnableWithMessageHistory(
 # 메인 페이지 렌더링
 def index(request):
     request.session['count'] = 0  # 세션에 count 저장
-    return render(request, 'index.html')
+
+from django.db import connection
+from .models import Dialog
+
+@csrf_exempt
+def index(request):
+    # 모든 데이터 삭제
+    request.session['count'] = 0  # 세션에 count 저장
+    Dialog.objects.all().delete()
+    
+    # Auto-increment 초기화
+    with connection.cursor() as cursor:
+        cursor.execute("DELETE FROM sqlite_sequence WHERE name='dialog';")
 
 
 
