@@ -5,9 +5,9 @@ import AutobiographyButton from './AutobiographyButton';
 const stepsData = ["유년기", "청년기", "중년기", "장년기"];
 
 const StepTracker = ({ setCurrentStep, currentStep }) => {
-  useEffect(() => {
-    console.log("Updated currentStep:", currentStep);
-  }, [currentStep]);
+  // useEffect(() => {
+  //   // console.log("Updated currentStep:", currentStep);
+  // }, [currentStep]);
 
   const handleStepClick = (index) => {
     setCurrentStep(index);

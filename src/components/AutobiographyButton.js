@@ -6,7 +6,7 @@ import image from '../images/gemini_logo_color.jpg';
 const AutobiographyButton = ({ onAddCard }) => {
   const navigate = useNavigate(); // navigate 훅 생성
 
-  console.log('onAddCard:', typeof onAddCard, onAddCard); // 디버그
+  // console.log('onAddCard:', typeof onAddCard, onAddCard); // 디버그
 
   const handleClick = async () => {
     try {

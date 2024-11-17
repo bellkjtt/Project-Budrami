@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import './Camera.css';
+import close from '../images/close.png';
 
 const ToggleSwitch = ({ isOn, onToggle, disabled }) => (
   <label className="toggle-switch">
@@ -21,14 +22,19 @@ const Camera = () => {
   const [showCooldownAlert, setShowCooldownAlert] = useState(false); // 알림 상태 관리
   const lastModelChangeRef = useRef(0); // 모델 전환 쿨다운 시간 관리
 
-  // 인증 토큰 관리 함수
   const setAuthToken = (token) => {
     localStorage.setItem('VTS_AUTH_TOKEN', token);
   };
 
   const getAuthToken = () => localStorage.getItem('VTS_AUTH_TOKEN');
 
-  // 카메라 초기화
+  // useEffect(() => {
+  //   // 새로고침 시 로컬 스토리지 초기화
+  //   window.onload = () => {
+  //     localStorage.clear();
+  //   };
+  // }, []);
+
   const initializeCamera = async () => {
     try {
       const devices = await navigator.mediaDevices.enumerateDevices();
@@ -39,7 +45,7 @@ const Camera = () => {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { deviceId: obsCamera.deviceId },
         });
-        streamRef.current = stream; // 스트림 저장
+        streamRef.current = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
@@ -51,12 +57,28 @@ const Camera = () => {
     }
   };
 
-  // WebSocket 연결 설정
   const connectWebSocket = () => {
     const ws = new WebSocket('ws://127.0.0.1:8001');
 
-    const requestAuthToken = () => {
-      if (ws.readyState === WebSocket.OPEN) {
+    ws.onopen = () => {
+      const existingToken = getAuthToken();
+      if (existingToken) {
+        // 기존 토큰이 있으면 인증 요청만 수행
+        const authPayload = {
+          apiName: 'VTubeStudioPublicAPI',
+          apiVersion: '1.0',
+          requestID: 'authentication',
+          messageType: "AuthenticationRequest",
+          data: {
+            pluginName: 'MyVTubePlugin',
+            pluginDeveloper: 'YourName',
+            pluginIcon: close,
+            authenticationToken: existingToken,
+          },
+        };
+        ws.send(JSON.stringify(authPayload));
+      } else {
+        // 기존 토큰이 없으면 새 토큰 요청
         const payload = {
           apiName: 'VTubeStudioPublicAPI',
           apiVersion: '1.0',
@@ -68,13 +90,12 @@ const Camera = () => {
       }
     };
 
-    ws.onopen = () => requestAuthToken();
-
     ws.onmessage = (event) => {
       const message = JSON.parse(event.data);
 
       if (message.messageType === 'AuthenticationTokenResponse') {
-        setAuthToken(message.data.authenticationToken);
+        const token = message.data.authenticationToken;
+        setAuthToken(token);
 
         const authPayload = {
           apiName: 'VTubeStudioPublicAPI',
@@ -84,7 +105,7 @@ const Camera = () => {
           data: {
             pluginName: 'MyVTubePlugin',
             pluginDeveloper: 'YourName',
-            authenticationToken: message.data.authenticationToken,
+            authenticationToken: token,
           },
         };
         ws.send(JSON.stringify(authPayload));
@@ -119,7 +140,6 @@ const Camera = () => {
     wsRef.current = ws;
   };
 
-  // 모델 변경 API 요청
   const sendModelChangeRequest = (modelID) => {
     if (!isAuthenticated) {
       console.error('세션 인증이 완료되지 않았습니다. 요청을 보낼 수 없습니다.');
@@ -145,7 +165,6 @@ const Camera = () => {
       wsRef.current.send(JSON.stringify(payload));
       lastModelChangeRef.current = currentTime; // 쿨다운 시간 업데이트
 
-      // 쿨다운 시작
       setIsCooldown(true);
       setTimeout(() => setIsCooldown(false), 2000); // 2초 후 쿨다운 종료
     }

@@ -19,9 +19,9 @@ function ChatPage({onAddCard}) {
     setMessages(prevMessages => [...prevMessages, { sender, text }]);
   }, []);
 
-  useEffect(() => {
-    console.log("Updated currentStep_chatPage:", currentStep);
-  }, [currentStep]);
+  // useEffect(() => {
+  //   console.log("Updated currentStep_chatPage:", currentStep);
+  // }, [currentStep]);
 
 
   const {
