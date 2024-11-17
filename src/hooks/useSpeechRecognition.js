@@ -26,9 +26,9 @@ const useSpeechRecognition = (addMessage, setIsLoading, currentStep, setCurrentS
   const currentAudioRef = useRef(null);
   const socketRef = useRef(null);  // WebSocket을 저장할 ref
 
-  useEffect(() => {
-    console.log("Updated currentStep_recogPage:", currentStep);
-  }, [currentStep]);
+  // useEffect(() => {
+  //   // console.log("Updated currentStep_recogPage:", currentStep);
+  // }, [currentStep]);
 
   // WebSocket 초기화 및 설정
   useEffect(() => {
@@ -145,9 +145,9 @@ const useSpeechRecognition = (addMessage, setIsLoading, currentStep, setCurrentS
   }, [stopCurrentAudio, addMessage]);
 
 
-  useEffect(() => {
-    console.log("Updated currentStep after response:", currentStep);
-  }, [currentStep]);
+  // useEffect(() => {
+  //   console.log("Updated currentStep after response:", currentStep);
+  // }, [currentStep]);
 
   // 백엔드 통신 함수
   const sendToBackend = useCallback(async (transcript) => { // 최신 currentStep 값 참조
@@ -173,12 +173,12 @@ const useSpeechRecognition = (addMessage, setIsLoading, currentStep, setCurrentS
       console.log('Response from backend:', data);
 
       const stepFromHeader = data.step; // 헤더에서 step 값 가져오기
-      console.log(stepFromHeader,'받은 스텝')
+      // console.log(stepFromHeader,'받은 스텝')
       if (stepFromHeader) {
         setCurrentStep(stepFromHeader); // 상태 업데이트
       }
 
-      console.log(currentStep,'받은 후')
+      // console.log(currentStep,'받은 후')
       // if (data.response) {
       await speakResponse(data.response);
       //   addMessage('bot', data.response);

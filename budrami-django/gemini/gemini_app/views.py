@@ -147,9 +147,6 @@ chain_with_history = RunnableWithMessageHistory(
         history_messages_key="chat_history"
     )
 
-# 메인 페이지 렌더링
-def index(request):
-    request.session['count'] = 0  # 세션에 count 저장
 
 from django.db import connection
 from .models import Dialog
@@ -177,35 +174,156 @@ def get_dialogues_from_store(session_id):
         return []
 
 
+# @csrf_exempt
+# def save_dialogues(request):
+#     if request.method != 'POST':
+#         return JsonResponse({'error': 'POST 요청만 허용됩니다.'}, status=405)
+
+#     # 세션 ID 가져오기 (기본값 'default_session')
+#     session_id = request.session.get('session_id', 'default_session')
+
+#     # store에서 대화 기록 가져오기
+#     dialogues = get_dialogues_from_store(session_id)
+#     if not dialogues:
+#         return JsonResponse({'message': '저장할 대화가 없습니다.'}, status=400)
+
+#     try:
+#         with transaction.atomic():
+#             # DB에 대화 기록 저장
+#             for dialogue in dialogues:
+#                 # HumanMessage와 AIMessage에 따라 message_type 설정
+#                 message_type = 'human' if isinstance(dialogue, HumanMessage) else 'ai'
+
+#                 Dialog.objects.create(
+#                     session_id=session_id,
+#                     content=dialogue.content,  # 메시지 내용 저장
+#                     message_type=message_type  # 메시지 유형 저장
+#                 )
+        
+#         return JsonResponse({'message': '대화가 성공적으로 저장되었습니다.'})
+#     except Exception as e:
+#         return JsonResponse({'error': f'저장 중 오류 발생: {str(e)}'}, status=500)
+
+import logging
+from openai import OpenAI
+import json
+
+# 로그 설정
+logging.basicConfig(level=logging.DEBUG, filename='debug.log', filemode='a',
+                    format='%(asctime)s - %(levelname)s - %(message)s')
+
 @csrf_exempt
 def save_dialogues(request):
     if request.method != 'POST':
         return JsonResponse({'error': 'POST 요청만 허용됩니다.'}, status=405)
 
-    # 세션 ID 가져오기 (기본값 'default_session')
+    logging.debug("save_dialogues 함수 호출 - POST 요청 확인")
+
+    # 세션 ID 가져오기
     session_id = request.session.get('session_id', 'default_session')
+    logging.debug(f"세션 ID: {session_id}")
 
     # store에서 대화 기록 가져오기
     dialogues = get_dialogues_from_store(session_id)
     if not dialogues:
+        logging.debug("대화 기록 없음")
         return JsonResponse({'message': '저장할 대화가 없습니다.'}, status=400)
 
     try:
         with transaction.atomic():
             # DB에 대화 기록 저장
+            logging.debug("DB에 대화 기록 저장 시작")
             for dialogue in dialogues:
-                # HumanMessage와 AIMessage에 따라 message_type 설정
                 message_type = 'human' if isinstance(dialogue, HumanMessage) else 'ai'
-
+                logging.debug(f"저장 중: {dialogue.content} (유형: {message_type})")
                 Dialog.objects.create(
                     session_id=session_id,
-                    content=dialogue.content,  # 메시지 내용 저장
-                    message_type=message_type  # 메시지 유형 저장
+                    content=dialogue.content,
+                    message_type=message_type
                 )
-        
-        return JsonResponse({'message': '대화가 성공적으로 저장되었습니다.'})
+
+            # Function Calling으로 이미지 프롬프트 생성
+            logging.debug("이미지 프롬프트 생성 시작")
+            response = generate_image_prompt(dialogues)
+
+            if 'error' in response:
+                logging.error(f"이미지 프롬프트 생성 오류: {response['error']}")
+                return JsonResponse({'error': response['error']}, status=500)
+
+        logging.debug("대화 저장 및 이미지 프롬프트 생성 완료")
+        return JsonResponse({
+            'message': '대화가 성공적으로 저장되었습니다.',
+            'image_prompt': response['data']  # GPT에서 반환된 JSON 데이터를 포함
+        })
     except Exception as e:
+        logging.error(f"저장 중 오류 발생: {str(e)}")
         return JsonResponse({'error': f'저장 중 오류 발생: {str(e)}'}, status=500)
+
+
+# GPT 함수 호출 스키마 정의
+def generate_image_prompt(dialogues):
+    try:
+        # 대화 내용을 하나의 텍스트로 결합
+        print(dialogues,'이게 전 대화')
+        combined_text = " ".join([dialogue.content for dialogue in dialogues])
+        print(combined_text,'이게 대화')
+        logging.debug(f"GPT 호출 입력 텍스트: {combined_text}")
+
+        # Function 정의
+        functions = [
+            {
+                "name": "generate_image_prompt",
+                "description": "대화 내용을 바탕으로 이미지 프롬프트를 생성합니다.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "summary": {
+                            "type": "string",
+                            "description": "대화 요약 텍스트"
+                        },
+                        "description": {
+                            "type": "string",
+                            "description": "이미지에 대한 세부 설명"
+                        },
+                        "style": {
+                            "type": "string",
+                            "description": "이미지 스타일 또는 분위기"
+                        },
+                        "elements": {
+                            "type": "string",
+                            "description": "이미지에 포함될 주요 요소"
+                        }
+                    },
+                    "required": ["summary", "description", "style", "elements"]
+                }
+            }
+        ]
+
+        client = OpenAI(
+            api_key=openai_api_key,  # This is the default and can be omitted
+            )
+        # GPT 호출
+
+        logging.debug("GPT 호출 시작")
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": "You are an assistant that generates structured JSON outputs for image prompts."},
+                {"role": "user", "content": f"Summarize the dialogue and create an image prompt: {combined_text}"}
+            ],
+            functions=functions,
+            function_call={"name": "generate_image_prompt"}  # 특정 함수 호출 강제
+        )
+        print(response)
+        logging.debug(f"GPT 응답: {response}")
+        # print(response.choices[0].message.content,'')
+        # GPT 응답에서 함수 호출 결과 추출
+        function_args = json.loads(response.choices[0].message.function_call.arguments)
+        logging.debug(f"GPT에서 생성된 JSON: {function_args}")
+        return {"data": function_args}
+    except Exception as e:
+        logging.error(f"GPT 호출 중 오류 발생: {str(e)}")
+        return {"error": f"GPT 호출 중 오류 발생: {str(e)}"}
 
 
 
