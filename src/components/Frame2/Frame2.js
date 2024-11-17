@@ -149,13 +149,13 @@ const Frame2 = () => {
       {/* 플립북 컴포넌트 */}
       <HTMLFlipBook
         ref={book}  // ref 전달
-        width={600}
-        height={800}
+        width={1000}
+        height={900}
         size="stretch"
         minWidth={315}
         maxWidth={1000}
         minHeight={420}
-        maxHeight={1350}
+        maxHeight={700}
         maxShadowOpacity={0.7}
         showCover={false}
         mobileScrollSupport={true}
