@@ -147,9 +147,6 @@ chain_with_history = RunnableWithMessageHistory(
         history_messages_key="chat_history"
     )
 
-# 메인 페이지 렌더링
-def index(request):
-    request.session['count'] = 0  # 세션에 count 저장
 
 from django.db import connection
 from .models import Dialog
