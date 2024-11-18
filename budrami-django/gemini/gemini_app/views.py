@@ -245,7 +245,7 @@ def save_dialogues(request):
             # Function Calling으로 이미지 프롬프트 생성
             logging.debug("이미지 프롬프트 생성 시작")
             response = generate_image_prompt(dialogues)
-
+            
             if 'error' in response:
                 logging.error(f"이미지 프롬프트 생성 오류: {response['error']}")
                 return JsonResponse({'error': response['error']}, status=500)
@@ -273,28 +273,28 @@ def generate_image_prompt(dialogues):
         functions = [
             {
                 "name": "generate_image_prompt",
-                "description": "대화 내용을 바탕으로 이미지 프롬프트를 생성합니다.",
+                "description": "대화 내용을 바탕으로 이미지 프롬프트를 생성합니다. 완성된 description 예시는 다음과 같습니다. A serene post-war Korean village, children playing joyfully by a clear, sparkling stream under a warm sun, skipping stones and catching minnows, lush greenery and traditional Korean houses in the background, peaceful smiles, the essence of childhood innocence and hope amidst a landscape that has seen hardship, soft sunlight casting gentle shadows, vibrant yet calming colors, capturing the beauty of resilience and new beginnings. \n\n 또한 title의 예시는 다음과 같습니다. \n꿈과 사랑으로 일군 인생\n감사속에 피어난 아름다움\n가족과 함께 단란한 시간을",
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "summary": {
+                        "title": {
                             "type": "string",
-                            "description": "대화 요약 텍스트"
+                            "description": "대화를 요약해서 가장 맞는 타이틀"
                         },
                         "description": {
                             "type": "string",
                             "description": "이미지에 대한 세부 설명"
                         },
-                        "style": {
+                        "subtitle": {
                             "type": "string",
-                            "description": "이미지 스타일 또는 분위기"
+                            "description": "title에 맞는 quote. 예시:'''가족과 이웃, 나를 지켜준 힘''' '''붓을 내려놓고, 가정을 품다.''' '''위기 속에서 하나 된 가족'''  "
                         },
                         "elements": {
                             "type": "string",
                             "description": "이미지에 포함될 주요 요소"
                         }
                     },
-                    "required": ["summary", "description", "style", "elements"]
+                    "required": ["title", "description", "subtitle", "elements"]
                 }
             }
         ]
@@ -390,3 +390,226 @@ def process_speech(request):
             return JsonResponse({'error': f'An error occurred: {str(e)}'}, status=500)
 
     return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+
+# views.py
+# views.py
+import os
+import json
+import time
+import logging
+import requests  # 추가된 부분
+import paramiko
+from scp import SCPClient
+from django.conf import settings
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+from cloudinary import uploader as cloudinary_uploader
+from lumaai import LumaAI
+from urllib.parse import urljoin
+
+
+ssh_server_ip = "185.150.27.254"  # Vast AI 서버의 공인 IP 주소
+ssh_port = 13761  # SSH 포트 번호
+ssh_username = "root"
+
+remote_directory = "/workspace/ComfyUI/output"  # ComfyUI 출력 디렉토리
+local_directory = "./media/images"  # 로컬 저장 디렉토리
+os.makedirs(local_directory, exist_ok=True)
+
+# 로깅 설정 강화
+logger = logging.getLogger(__name__)
+
+def setup_ssh_connection():
+    """SSH 연결 설정"""
+    try:
+        # 더 자세한 로깅 설정
+        logging.getLogger("paramiko").setLevel(logging.DEBUG)
+        
+        # Windows 환경에서 SSH 키 경로 직접 지정
+        ssh_key_path = r"C:\Users\Guest_KDT\.ssh\id_rsa"
+        logging.info(f"Using SSH key from: {ssh_key_path}")
+        
+        # SSH 클라이언트 설정
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        
+        # 개인키 존재 확인
+        if not os.path.exists(ssh_key_path):
+            raise FileNotFoundError(f"SSH private key not found at {ssh_key_path}")
+            
+        # 개인키 로드 시도
+        try:
+            logging.info("Attempting to load private key...")
+            private_key = paramiko.RSAKey.from_private_key_file(ssh_key_path)
+            logging.info("Private key loaded successfully")
+        except paramiko.ssh_exception.PasswordRequiredException:
+            passphrase = getpass.getpass('Enter passphrase for key: ')
+            private_key = paramiko.RSAKey.from_private_key_file(ssh_key_path, password=passphrase)
+        except Exception as e:
+            logging.error(f"Failed to load private key: {e}")
+            raise
+        
+        # SSH 연결 시도
+        logging.info(f"Attempting to connect to {settings.SSH_SERVER_IP}:{settings.SSH_PORT}...")
+        ssh.connect(
+            ssh_server_ip,
+            port=ssh_port,
+            username=ssh_username,
+            pkey=private_key,
+            timeout=10
+        )
+        logging.info("SSH connection successful")
+        return ssh
+    except Exception as e:
+        logging.error(f"SSH connection failed: {str(e)}")
+        raise
+
+def get_latest_file_path(ssh, remote_directory):
+    """서버 디렉토리에서 가장 최근 파일 경로 반환"""
+    try:
+        stdin, stdout, stderr = ssh.exec_command(f"ls -t {remote_directory}/*.png | head -n 1")
+        latest_file = stdout.read().decode().strip()
+        if latest_file:
+            return latest_file
+        else:
+            raise FileNotFoundError("지정된 디렉토리에 파일이 없습니다.")
+    except Exception as e:
+        logging.error(f"최신 파일을 찾는 중 오류 발생: {e}")
+        raise
+
+def download_image_via_ssh(ssh, remote_path, local_path):
+    """SSH를 통해 Vast AI 서버에서 파일 다운로드"""
+    try:
+        with SCPClient(ssh.get_transport()) as scp:
+            scp.get(remote_path, local_path)
+        logging.info(f"이미지를 SSH로 다운로드했습니다: {local_path}")
+    except Exception as e:
+        logging.error(f"SSH로 이미지 다운로드 중 오류 발생: {e}")
+        raise
+
+@csrf_exempt
+def generate_image(request):
+    """이미지 생성 및 다운로드 뷰"""
+    try:
+        logger.info("이미지 생성 프로세스 시작")
+        print(request)
+
+        try:
+            body = json.loads(request.body.decode('utf-8'))
+            image_prompt = body.get('prompt', {}).get('description', '')
+        except Exception as e:
+            logger.error(f"요청 본문 파싱 실패: {str(e)}")
+            return JsonResponse({
+                'status': 'error',
+                'message': '요청 본문을 파싱하는 데 실패했습니다.'
+            }, status=400)
+        print(image_prompt)
+        # workflow JSON 파일 경로 확인
+        workflow_path = os.path.join(settings.BASE_DIR, 'workflow_api.json')
+        logger.info(f"Workflow 파일 경로: {workflow_path}")
+        
+        # workflow 파일 존재 확인
+        if not os.path.exists(workflow_path):
+            logger.error(f"Workflow 파일을 찾을 수 없음: {workflow_path}")
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Workflow 파일을 찾을 수 없습니다.'
+            }, status=400)
+
+        # workflow JSON 로드
+        try:
+            with open(workflow_path) as f:
+                workflow = json.load(f)
+            logger.info("Workflow JSON 로드 성공")
+        except Exception as e:
+            logger.error(f"Workflow JSON 로드 실패: {str(e)}")
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Workflow 파일 로드에 실패했습니다.'
+            }, status=400)
+
+        for key, node in workflow.items():
+            if isinstance(node, dict) and node.get("class_type") == "CLIPTextEncode":
+                node["inputs"]["text"] = image_prompt
+
+        server_address = "http://127.0.0.1:8189"
+        # ComfyUI API 요청
+        try:
+            logger.info(f"ComfyUI 서버 주소: {settings.COMFYUI_SERVER_ADDRESS}")
+            response = requests.post(
+                f"{server_address}/prompt",
+                json={"prompt": workflow}
+            )
+            logger.info(f"ComfyUI API 응답 상태 코드: {response.status_code}")
+            if response.status_code != 200:
+                logger.error(f"ComfyUI API 오류 응답: {response.text}")
+                return JsonResponse({
+                    'status': 'error',
+                    'message': f'ComfyUI API 오류: {response.status_code}'
+                }, status=400)
+        except Exception as e:
+            logger.error(f"ComfyUI API 요청 실패: {str(e)}")
+            return JsonResponse({
+                'status': 'error',
+                'message': f'ComfyUI API 요청 실패: {str(e)}'
+            }, status=500)
+
+        # SSH 연결
+        try:
+            logger.info(f"SSH 연결 시도: {settings.SSH_SERVER_IP}:{settings.SSH_PORT}")
+            ssh = setup_ssh_connection()
+            logger.info("SSH 연결 성공")
+        except Exception as e:
+            logger.error(f"SSH 연결 실패: {str(e)}")
+            return JsonResponse({
+                'status': 'error',
+                'message': f'SSH 연결 실패: {str(e)}'
+            }, status=500)
+
+        try:
+            # 최신 이미지 파일 경로 가져오기
+            remote_image_path = get_latest_file_path(ssh, settings.REMOTE_DIRECTORY)
+            logger.info(f"원격 이미지 경로: {remote_image_path}")
+            file_name = os.path.basename(remote_image_path)
+            print(file_name,'파일 이름')
+            local_image_path = os.path.join(local_directory, file_name).replace('\\', '/')
+            print(local_image_path,'합친 경로')
+            # 이미지 다운로드
+            local_file_path = download_image_via_ssh(ssh, remote_image_path, local_image_path)
+            logger.info(f"로컬 파일 경로: {local_file_path}")
+
+            # 이미지 URL 생성
+            image_url = request.build_absolute_uri(settings.MEDIA_URL + local_image_path)
+            print(image_url,'첫번쨰 URL')
+            image_url = image_url.replace('\\', '/')
+            print(image_url,'두번째 URL')
+            generated_image_url = urljoin('http://127.0.0.1:8000/media/', image_url.split('media/')[-1])
+            print(generated_image_url,'세번쨰 URL')
+            logger.info(f"생성된 이미지 URL: {generated_image_url}")
+
+            return JsonResponse({
+                'status': 'success',
+                'image_url': generated_image_url
+            })
+
+        except Exception as e:
+            logger.error(f"이미지 처리 중 오류 발생: {str(e)}")
+            return JsonResponse({
+                'status': 'error',
+                'message': f'이미지 처리 중 오류 발생: {str(e)}'
+            }, status=500)
+
+        finally:
+            if ssh:
+                ssh.close()
+                logger.info("SSH 연결 종료")
+
+    except Exception as e:
+        logger.error(f"예상치 못한 오류: {str(e)}")
+        return JsonResponse({
+            'status': 'error',
+            'message': f'서버 오류가 발생했습니다: {str(e)}'
+        }, status=500)

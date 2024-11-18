@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom'; // useNavigate 추가
 import './AutobiographyButton.css';
-import image from '../images/gemini_logo_color.jpg';
+// import image from '../images/gemini_logo_color.jpg';
 
 const AutobiographyButton = ({ onAddCard }) => {
   const navigate = useNavigate(); // navigate 훅 생성
@@ -22,27 +22,27 @@ const AutobiographyButton = ({ onAddCard }) => {
   
       const data = await response.json(); // JSON 데이터 받아오기
       console.log(data.image_prompt)
-      // const imagePrompt = data.image_prompt; // image_prompt 추출
-      const title = data.image_prompt.elements;
-      const subtitle = data.image_prompt.style;
-      // if (!imagePrompt) {
-      //   throw new Error('Image prompt is missing from the response.');
-      // }
+      const imagePrompt = data.image_prompt; // image_prompt 추출
+      const title = data.image_prompt.title;
+      const subtitle = data.image_prompt.subtitle;
+      if (!imagePrompt) {
+        throw new Error('Image prompt is missing from the response.');
+      }
   
-      // // 이미지 생성 API로 image_prompt 보내기
-      // const imageResponse = await fetch('http://127.0.0.1:8000/generate_image/', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ prompt: imagePrompt }),
-      // });
+      // 이미지 생성 API로 image_prompt 보내기
+      const imageResponse = await fetch('http://127.0.0.1:8000/generate_image/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: imagePrompt }),
+      });
   
-      // if (!imageResponse.ok) {
-      //   throw new Error('Failed to generate image.');
-      // }
+      if (!imageResponse.ok) {
+        throw new Error('Failed to generate image.');
+      }
   
-      // const imageData = await imageResponse.json();
-      // const generatedImageUrl = imageData.image_url; // 생성된 이미지 URL 받아오기
-       const generatedImageUrl = image; // 생성된 이미지 URL 받아오기
+      const imageData = await imageResponse.json();
+      const generatedImageUrl = imageData.image_url; // 생성된 이미지 URL 받아오기
+      //  const generatedImageUrl = image; // 생성된 이미지 URL 받아오기
 
       const newCard = {
         id: 4,
