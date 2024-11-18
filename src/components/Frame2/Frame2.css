@@ -1,316 +1,241 @@
 /* src/components/Frame2/Frame2.css */
 
-/* 전체 컨테이너 스타일 */
+
 .container {
-    position: relative;
-    width: 100%;
-    min-height: 100vh;
-    background-color: #f5f5dc;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding-top: 60px; /* 버튼 컨테이너 공간 확보 */
-  }
-  
-  /* 버튼 컨테이너 스타일 */
-  .button-container {
-    position: absolute;
-    top: 55px;
-    width: 90%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    z-index: 1; /* 플립북보다 낮은 값으로 설정 */
-  }
-  
-  /* 왼쪽 버튼 스타일 */
-  .bookmark-button.left {
-    display: flex;
-    align-items: center;
-    background-color: #88BC84;
-    border-radius: 30px 30px 0 0;
-    padding: 10px 20px;
-    font-family: 'Yeon Sung', cursive;
-    font-size: 25px;
-    color: #424242;
-    cursor: pointer;
-    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
-    transition: background-color 0.3s, transform 0.3s;
-    position: relative;
-    left: 500px;
-    z-index: 5;
-  }
-  
-  .bookmark-button.left:hover {
-    background-color: #6AAE6A;
-    transform: scale(1.05);
-  }
-  
-  /* 오른쪽 버튼들 컨테이너 */
-  .right-buttons {
-    display: flex;
-    gap: 20px;
-    position: relative;
-    left: -500px;
-  }
-  
-  /* 오른쪽 버튼 스타일 */
-  .bookmark-button {
-    display: flex;
-    align-items: center;
-    background-color: rgba(240, 128, 128, 0.82);
-    border-radius: 30px 30px 0 0;
-    padding: 10px 20px;
-    font-family: 'Yeon Sung', cursive;
-    font-size: 25px;
-    color: #424242;
-    cursor: pointer;
-    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
-    transition: background-color 0.3s, transform 0.3s;
-  }
-  
-  .bookmark-button:hover {
-    background-color: rgba(240, 128, 128, 0.95);
-    transform: scale(1.05);
-  }
-  
-  /* 종료 버튼 스타일 */
-  .close-button {
-    position: fixed;
-    top: 60px;
-    right: 20px;
-    background-color: rgba(205, 178, 141, 0.35);
-    border-radius: 100px 0 0 100px;
-    padding: 10px 20px;
-    display: flex;
-    align-items: center;
-    z-index: 1000;
-    cursor: pointer;
-    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
-    transition: background-color 0.3s, transform 0.3s;
-  }
-  
-  .close-button:hover {
-    background-color: rgba(205, 178, 141, 0.5);
-    transform: scale(1.05);
-  }
-  
-  .close-icon {
-    width: 50px;
-    height: 50px;
-    margin-right: 10px;
-  }
-  
-  .close-button span {
-    font-family: 'Yeon Sung', cursive;
-    font-size: 25px;
-    color: #434343;
-  }
-  
-  /* 플립북 스타일 */
-  .flip-book {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    background-image: url('../../images/bookpage.png'); /* 양쪽 페이지에 배경 적용 */
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    padding: 50px;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-    border-radius: 50px;
-    position: relative;
-    margin-top: 65px; /* 버튼 컨테이너 공간 확보 */
-    z-index: 2;
-  }
-  
+  position: relative;
+  width: 70%;
+  min-height: 100vh;
+  background-color: #f5f5dc;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-left: 16%;
+  padding-top: 0vh;
+  padding-right: 30%;
 
-  
-  /* 왼쪽 페이지 스타일 */
-  .left-page {
-    flex: 1;
-    background-color: transparent;
-    padding: 70px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  /* 오른쪽 페이지 스타일 */
-  .right-page {
-    flex: 1;
-    background-color: transparent;
-    padding: 100px; /* 주변 여백을 늘리기 위해 패딩을 증가시킴 */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center; /* 세로 방향 중앙 정렬 */
-  }
-  
-  /* 비디오 스타일 */
-  .background-video {
-    width: 80%;
-    height: auto;
-    margin-bottom: 20px;
-    border-radius: 5px;
-  }
-  
-  /* 타이틀 스타일 */
-  .title {
-    margin-top: 20px;
-    font-family: 'Yeon Sung', cursive;
-    font-size: 60px;
-    text-align: center;
-  }
-  
-  /* 인용구 스타일 */
-  .quote {
-    margin-top: 10px;
-    font-family: 'Yeon Sung', cursive;
-    font-size: 30px;
-    text-align: center;
-    color: #838383;
-  }
-  
-  /* 오른쪽 페이지 텍스트 스타일 */
-  .right-page p {
-    font-family: 'Times New Roman', serif;
-    font-size: 45px;
-    color: #494949;
-    line-height: 1.6;
-    text-align: left;
-    max-width: 800px;
-    margin: 20px;
-  }
-  
-  /* 푸터 스타일 */
-  .footer {
-    text-align: right;
-    padding: 10px;
-  }
 
-  /* 로고 이미지 스타일 */
-  .brand-logo {
-    width: 150px; /* 필요에 따라 크기를 조절하세요 */
-    height: auto;
-  }
-    
-  /* 네비게이션 아이콘 스타일 */
-  .navigation {
-    position: absolute;
-    top: 50%;
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transform: translateY(-50%);
-    padding-left: 30px;
-    padding-right: 30px;
-    z-index: 100;
-  }
+}
+
+.button-container {
+  position: absolute;
+  top: 0vh;
+  width: 57%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 1;
+}
+
+.bookmark-button.left {
+  display: flex;
+  align-items: center;
+  background-color: #88BC84;
+  border-radius: 2vw 2vw 0 0;
+  padding: 1vh 2vw;
+  font-family: 'Yeon Sung', cursive;
+  font-size: clamp(16px, 0.9vw, 25px);
+  color: #424242;
+  cursor: pointer;
+  box-shadow: 0.2vw 0.2vw 0.5vw rgba(0, 0, 0, 0.3);
+  transition: background-color 0.3s, transform 0.3s;
+  position: relative;
+  left: 0%;
+  z-index: 5;
+}
+
+.right-buttons {
+  display: flex;
+  gap: 0.6vw;
+  position: relative;
   
-  .nav-icon {
-    width: 300px;
-    height: 300px;
-    cursor: pointer;
-    transition: transform 0.3s, opacity 0.3s;
-  }
-  
-  .nav-icon:hover {
-    transform: scale(1.2);
-    opacity: 0.8;
-  }
-  .icon {
-    width: 50px;
-    height: 50px;
-    margin-right: 8px;
-  }
-  /* 슬라이드쇼 모드 스타일 */
+}
+
+.bookmark-button {
+  display: flex;
+  align-items: center;
+  background-color: rgba(240, 128, 128, 0.82);
+  border-radius: 2vw 2vw 0 0;
+  padding: 1vh 1vw;
+  font-family: 'Yeon Sung', cursive;
+  font-size: clamp(16px, 0.9vw, 25px);
+  color: #424242;
+  cursor: pointer;
+  box-shadow: 0.2vw 0.2vw 0.5vw rgba(0, 0, 0, 0.3);
+  transition: background-color 0.3s, transform 0.3s;
+}
+
+.close-button {
+  position: fixed;
+  top: 0vh;
+  right: 2vw;
+  background-color: rgba(205, 178, 141, 0.35);
+  border-radius: 5vw 0 0 5vw;
+  padding: 1vh 2vw;
+  display: flex;
+  align-items: center;
+  z-index: 1000;
+  cursor: pointer;
+  box-shadow: 0.2vw 0.2vw 0.5vw rgba(0, 0, 0, 0.3);
+  transition: background-color 0.3s, transform 0.3s;
+}
+
+.close-icon {
+  width: 3vw;
+  height: 3vw;
+  margin-right: 1vw;
+}
+
+.close-button span {
+  font-family: 'Yeon Sung', cursive;
+  font-size: clamp(16px, 2vw, 25px);
+  color: #434343;
+}
+
+.flip-book {
+  width: 50vw;
+  height: 75vh;
+  display: flex;
+  justify-content: center;
+  background-image: url('../../images/bookpage.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  padding: 0vh;
+  box-shadow: 0 0 1vw rgba(0, 0, 0, 0.1);
+  border-radius: 3vw;
+  position: relative;
+  margin-top: 8vh;
+  z-index: 2;
+}
+
+.left-page, .right-page {
+  flex: 1;
+  background-color: transparent;
+  padding-right: 3vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.background-video {
+  width: 80%;
+  height: 80%;
+  margin-bottom: 2vh;
+  border-radius: 0.5vw;
+}
+
+.title {
+  margin-top: 0vh;
+  font-family: 'Yeon Sung', cursive;
+  font-size: clamp(24px, 2vw, 60px);
+  text-align: center;
+}
+
+.quote {
+  margin-top: 1vh;
+  font-family: 'Yeon Sung', cursive;
+  font-size: clamp(16px, 1vw, 30px);
+  text-align: center;
+  color: #838383;
+}
+
+.right-page p {
+  font-family: 'Times New Roman', serif;
+  font-size: clamp(18px, 1.3vw, 45px);
+  color: #494949;
+  line-height: 1.6;
+  text-align: left;
+  max-width: 90%;
+  margin: 2vh;
+}
+
+.navigation {
+  position: absolute;
+  top: 30%;
+  width: 90%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transform: translateY(-50%);
+  padding: 0 3vw;
+  z-index: 100;
+}
+
+.nav-icon {
+  width: 20vw;
+  height: auto;
+  max-width: 300px;
+  cursor: pointer;
+  transition: transform 0.3s, opacity 0.3s;
+}
+
+.icon {
+  width: 3vw;
+  height: 3vw;
+  margin-right: 0.5vw;
+  min-width: 20px;
+  min-height: 20px;
+}
+
 .slideshow-container {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  width: 90%;
+  height: 100vh;
   background-color: black;
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 10000; /* 전체 화면 위에 표시 */
+  z-index: 10000;
 }
 
 .slideshow-video {
   width: 90%;
-  height: 90%;
+  height: 90vh;
+  object-fit: contain;
 }
 
 .exit-button {
   position: absolute;
-  top: 20px;
-  right: 20px;
+  top: 2vh;
+  right: 2vw;
   background-color: rgba(255, 255, 255, 0.7);
   border: none;
-  border-radius: 5px;
-  padding: 10px 20px;
-  font-size: 20px;
+  border-radius: 0.5vw;
+  padding: 1vh 2vw;
+  font-size: clamp(14px, 1.5vw, 20px);
   cursor: pointer;
 }
 
-.exit-button:hover {
-  background-color: rgba(255, 255, 255, 1);
-}
-
-
-  /* 반응형 디자인 */
-  @media (max-width: 768px) {
-    .flip-book {
-      width: 100%;
-      height: auto;
-    }
-    .icon {
-      width: 5px;
-      height: 5px;
-      margin-right: 8px;
-    }
-
-    .left-page,
-    .right-page {
-      padding: 20px;
-    }
-  
-    .title {
-      font-size: 36px;
-    }
-  
-    .quote {
-      font-size: 18px;
-    }
-  
-    .right-page p {
-      font-size: 28px;
-      text-align: center;
-      max-width: 100%;
-    }
-  
-    .nav-icon {
-      width: 50px;
-      height: 50px;
-    }
-  
-    .bookmark-button {
-      font-size: 20px;
-      padding: 8px 16px;
-    }
-  
-  
-    .close-button span {
-      font-size: 20px;
-    }
-  
-    .close-icon {
-      width: 20px;
-      height: 20px;
-      margin-right: 8px;
-    }
+@media (max-width: 768px) {
+  .button-container {
+      flex-direction: column;
+      gap: 1vh;
   }
+
+  .bookmark-button.left,
+  .right-buttons {
+      position: static;
+      width: 100%;
+  }
+
+  .right-buttons {
+      flex-direction: column;
+      gap: 1vh;
+  }
+
+  .bookmark-button {
+      width: 100%;
+      justify-content: center;
+  }
+
+  .nav-icon {
+      width: 15vw;
+  }
+
+  .icon {
+      width: 5vw;
+      height: 5vw;
+  }
+}

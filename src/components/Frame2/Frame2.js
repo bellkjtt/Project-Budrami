@@ -1,7 +1,8 @@
 // src/components/Frame2/Frame2.js
-import React, { useRef, useState, useEffect } from 'react';
-import HTMLFlipBook from 'react-pageflip';
 import './Frame2.css';
+import React, { useRef, useState, useEffect } from 'react';
+
+import HTMLFlipBook from 'react-pageflip';
 import { useNavigate } from 'react-router-dom';
 
 
@@ -29,6 +30,20 @@ const Frame2 = () => {
   const [isSlideshowActive, setIsSlideshowActive] = useState(false); // 슬라이드쇼 모드
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0); // 현재 재생 중인 비디오 인덱스
   const navigate = useNavigate(); // useNavigate 훅 사용
+
+  useEffect(() => {
+    // 현재 새로고침 여부 확인
+    const isReloaded = sessionStorage.getItem('isReloaded');
+    if (!isReloaded) {
+      // 새로고침 플래그 설정
+      sessionStorage.setItem('isReloaded', 'true');
+      // 새로고침 실행
+      window.location.reload();
+    } else {
+      // 새로고침 플래그 초기화 (새로운 페이지 진입을 위해)
+      sessionStorage.removeItem('isReloaded');
+    }
+  }, []);
 
   // 비디오 변경 핸들러 (슬라이드쇼)
   useEffect(() => {
@@ -149,13 +164,13 @@ const Frame2 = () => {
       {/* 플립북 컴포넌트 */}
       <HTMLFlipBook
         ref={book}  // ref 전달
-        width={600}
-        height={800}
+        width={1000}
+        height={900}
         size="stretch"
         minWidth={315}
         maxWidth={1000}
         minHeight={420}
-        maxHeight={1350}
+        maxHeight={700}
         maxShadowOpacity={0.7}
         showCover={false}
         mobileScrollSupport={true}
