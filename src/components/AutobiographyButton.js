@@ -4,6 +4,7 @@ import './AutobiographyButton.css';
 
 const AutobiographyButton = ({ onAddCard }) => {
   const [alsoisLoading, setAlsoIsLoading] = useState(false); // 로딩 상태 추가
+  const [idCounter, setIdCounter] = useState(3); // 초기 ID를 3으로 설정
   const navigate = useNavigate();
 
   const handleClick = async () => {
@@ -38,13 +39,15 @@ const AutobiographyButton = ({ onAddCard }) => {
       const generatedImageUrl = imageData.image_url;
 
       const newCard = {
-        id: 4,
+        id: idCounter, // 고유 ID 생성,
         title: title,
         subtitle: subtitle,
         image: generatedImageUrl,
+        video: null, // 비디오가 없으면 null로 설정
       };
-
+      
       onAddCard(newCard);
+      setIdCounter((prevId) => prevId + 1); // ID 카운터 증가
       navigate('/gallary');
     } catch (error) {
       console.error('Error processing image:', error);
