@@ -141,3 +141,67 @@ STATICFILES_DIRS = [
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# settings.py에 추가할 설정
+
+import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# SSH 설정
+SSH_SERVER_IP = os.getenv('SSH_SERVER_IP', '185.150.27.254')
+SSH_PORT = int(os.getenv('SSH_PORT', 13761))
+SSH_USERNAME = os.getenv('SSH_USERNAME', 'root')
+SSH_KEY_PATH = os.getenv('SSH_KEY_PATH', os.path.expanduser('~/.ssh/id_rsa'))
+
+# ComfyUI 설정
+COMFYUI_SERVER_ADDRESS = os.getenv('COMFYUI_SERVER_ADDRESS', 'http://127.0.0.1:8189')
+REMOTE_DIRECTORY = os.getenv('REMOTE_DIRECTORY', '/workspace/ComfyUI/output')
+
+# Cloudinary 설정
+USE_CLOUDINARY = os.getenv('USE_CLOUDINARY', 'False').lower() == 'true'
+if USE_CLOUDINARY:
+    CLOUDINARY_CLOUD_NAME = os.getenv('CLOUDINARY_CLOUD_NAME')
+    CLOUDINARY_API_KEY = os.getenv('CLOUDINARY_API_KEY')
+    CLOUDINARY_API_SECRET = os.getenv('CLOUDINARY_API_SECRET')
+
+# 미디어 파일 설정
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# settings.py에 추가
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': 'debug.log',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        '': {  # 루트 로거
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+        },
+        'your_app_name': {  # 앱 이름으로 변경
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    },
+}
