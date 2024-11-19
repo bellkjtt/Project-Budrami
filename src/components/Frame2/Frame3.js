@@ -1,49 +1,175 @@
-// src/components/Frame2/Frame2.js
-import React, { useRef } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import HTMLFlipBook from 'react-pageflip';
+import { useNavigate, useParams } from 'react-router-dom';
 import './Frame2.css';
+import { Link } from 'react-router-dom';
 
-// 이미지 및 비디오 파일 import
 import ArrowLeft from '../../images/arrow_left.png';
 import ArrowRight from '../../images/arrow_right.png';
 import CloseIcon from '../../images/close.png';
 import MusicNote from '../../images/music_note.png';
 import PhotoIcon from '../../images/photo.png';
 import RewindIcon from '../../images/rewind.png';
-import MainVideo from '../../videos/main-video.mp4'; // 첫 번째 페이지 비디오
-import Video2 from '../../videos/main-video2.mp4'; // 두 번째 페이지 비디오
-import Video3 from '../../videos/main-video3.mp4'; // 세 번째 페이지 비디오
-import BookPage from '../../images/bookpage.png'; // 배경 이미지
+import Logo from '../../images/logo.png';
+import SpeakerIcon from '../../images/speaker.png'; // 스피커 아이콘 추가
 
-const Frame2 = () => {
+const Frame2 = ({ cards: initialCards }) => {
+  // const bookRef = useRef(null);
+  const { pageId } = useParams(); // URL에서 pageId를 가져옴
+  const navigate = useNavigate();
+
   const book = useRef();
+  const [isMusicPlaying, setIsMusicPlaying] = useState(true); // 음악 상태 관리
+  const [isAudioMuted, setIsAudioMuted] = useState(false); // 음성 상태 관리
+  const [isSlideshowActive, setIsSlideshowActive] = useState(false); // 슬라이드쇼 모드
+  const [currentVideoIndex, setCurrentVideoIndex] = useState(0); // 현재 재생 중인 비디오 인덱스
+
+  const [cards, setCards] = useState(initialCards); // 상태로 cards 관리
+
+  // 동적으로 카드가 추가될 경우 상태를 업데이트
+  useEffect(() => {
+    setCards(initialCards);
+  }, [initialCards]);
+
+  // 특정 페이지로 이동 (초기 진입 및 상태 변경 시)
+  useEffect(() => {
+    if (pageId && book.current?.pageFlip) {
+      const targetIndex = parseInt(pageId, 10) * 2; // pageId를 카드의 id로 계산
+      if (targetIndex >= 0 && targetIndex < cards.length * 2) {
+        setTimeout(() => {
+          book.current?.pageFlip()?.flip(targetIndex + 1); // 계산된 targetIndex로 페이지 이동
+        }, 10);
+      }
+    }
+  }, [pageId, cards]); // cards 변경 시에도 이동 로직 재실행
+
+  // 비디오 변경 핸들러 (슬라이드쇼)
+  useEffect(() => {
+    let videoTimer;
+    if (isSlideshowActive) {
+      videoTimer = setTimeout(() => {
+        setCurrentVideoIndex((prevIndex) => (prevIndex + 1) % cards.length);
+      }, 5000); // 5초마다 비디오 전환 (필요에 따라 시간 변경 가능)
+    }
+    return () => clearTimeout(videoTimer); // 타이머 정리
+  }, [isSlideshowActive, currentVideoIndex]);
+
+  // 슬라이드쇼 모드 토글
+  const handleFrameMode = () => {
+    setIsSlideshowActive(true); // 슬라이드쇼 모드 시작
+  };
+
+  const handleExitSlideshow = () => {
+    setIsSlideshowActive(false); // 슬라이드쇼 모드 종료
+  };
 
   // 버튼 클릭 핸들러
   const handleFirstPage = () => {
     console.log('첫 페이지로 이동');
-    book.current.pageFlip().flip(0);
+    if (book.current?.pageFlip) {
+      book.current.pageFlip().flip(0); // 첫 페이지로 이동
+    } else {
+      console.error('HTMLFlipBook이 초기화되지 않았습니다.');
+    }
   };
 
+  // 음악 켜기/끄기 토글
   const handleMusicToggle = () => {
-    console.log('음악 켜기/끄기');
-    // 실제 로직 추가
+    setIsMusicPlaying((prevState) => !prevState); // 상태 토글
+    console.log(isMusicPlaying ? '음악 끄기' : '음악 켜기');
+    // 실제 음악 켜기/끄기 로직 추가
   };
 
-  const handleFrameMode = () => {
-    console.log('액자 형식으로 재생');
-    // 실제 로직 추가
+  // 음성 끄기/켜기 토글
+  const handleAudioToggle = () => {
+    setIsAudioMuted((prevState) => !prevState); // 상태 토글
+    console.log(isAudioMuted ? '음성 켜기' : '음성 끄기');
+    // 실제 음성 끄기/켜기 로직 추가
   };
+
 
   const handleClose = () => {
     console.log('종료 버튼 클릭');
-    window.location.href = '/'; // 예시: 홈 페이지로 이동
+    navigate('/'); // useNavigate로 페이지 이동
+  };
+
+
+
+  const handleFlipPrev = () => {
+    if (book.current && book.current.pageFlip) {
+      book.current.pageFlip().flipPrev();
+    }
+  };
+
+  const handleFlipNext = () => {
+    if (book.current && book.current.pageFlip) {
+      book.current.pageFlip().flipNext();
+    }
+  };
+
+  // 페이지 렌더링
+  const renderPage = (card, pageIndex) => {
+    return (
+      <div className="page-content">
+        {pageIndex % 2 === 0 ? ( // 짝수 페이지
+          card.video ? (
+            <video
+              src={card.video}
+              autoPlay
+              loop
+              muted
+              className="background-video"
+            />
+          ) : card.image ? (
+            <img
+              src={card.image}
+              alt={`page ${pageIndex}`}
+              className="background-image"
+            />
+          ) : (
+            <div className="background-placeholder">콘텐츠가 없습니다.</div>
+          )
+        ) : ( // 홀수 페이지
+          card.text && (
+            <div className="page-text">
+              <p>{card.text}</p>
+            </div>
+          )
+        )}
+      </div>
+    );
   };
 
   return (
     <div className="container">
+      {/* HTMLFlipBook 컴포넌트 */}
+      <HTMLFlipBook
+        ref={book}  // ref 전달
+        width={800}
+        height={800}
+        size="stretch"
+        minWidth={400}
+        maxWidth={600}
+        minHeight={400}
+        maxHeight={700}
+        maxShadowOpacity={0.7}
+        showCover={false}
+        mobileScrollSupport={true}
+        className="flip-book"
+      >
+        {cards.flatMap((card) => [
+          <div className="left-page" key={`image-${card.id}`}>
+            {renderPage(card, card.id * 2)}
+          </div>,
+          <div className="right-page" key={`text-${card.id}`}>
+            {renderPage(card, card.id * 2 + 1)}
+          </div>,
+        ])}
+      </HTMLFlipBook>
+
       {/* 버튼 컨테이너 */}
       <div className="button-container">
-        {/* 왼쪽에 "첫 페이지로" 버튼 */}
+        {/* 첫 페이지 이동 버튼 */}
         <div
           className="bookmark-button left"
           onClick={handleFirstPage}
@@ -53,16 +179,28 @@ const Frame2 = () => {
           첫 페이지로
         </div>
 
-        {/* 오른쪽에 "음악끄기"와 "액자형식으로 재생" 버튼을 가로로 정렬 */}
         <div className="right-buttons">
+          {/* 음성 토글 버튼 */}
+          <div
+            className="bookmark-button"
+            onClick={handleAudioToggle}
+            aria-label={isAudioMuted ? '음성 켜기' : '음성 끄기'}
+          >
+            <img src={SpeakerIcon} alt="Speaker" className="icon" />
+            {isAudioMuted ? '음성 켜기' : '음성 끄기'}
+          </div>
+
+          {/* 음악 토글 버튼 */}
           <div
             className="bookmark-button"
             onClick={handleMusicToggle}
-            aria-label="음악 끄기"
+            aria-label={isMusicPlaying ? '음악 끄기' : '음악 켜기'}
           >
             <img src={MusicNote} alt="Music Note" className="icon" />
-            음악끄기
+            {isMusicPlaying ? '음악끄기' : '음악켜기'}
           </div>
+
+          {/* 액자 형식 재생 버튼 */}
           <div
             className="bookmark-button"
             onClick={handleFrameMode}
@@ -72,150 +210,15 @@ const Frame2 = () => {
             액자형식으로 재생
           </div>
         </div>
-
-        {/* "종료" 버튼 */}
-        <div
-          className="close-button"
-          onClick={handleClose}
-          aria-label="종료"
-        >
-          <img src={CloseIcon} alt="Close" className="close-icon" />
-          <span>종료</span>
-        </div>
       </div>
 
-      {/* 플립북 컴포넌트 */}
-      <HTMLFlipBook
-        width={600}
-        height={800}
-        size="stretch"
-        minWidth={315}
-        maxWidth={1000}
-        minHeight={420}
-        maxHeight={1350}
-        maxShadowOpacity={0.5}
-        showCover={false}
-        mobileScrollSupport={true}
-        className="flip-book"
-        ref={book}
-        style={{ backgroundImage: `url(${BookPage})` }} // 배경 이미지 적용
-      >
-        {/* 페이지 1: 왼쪽 페이지 - 애니메이션 및 제목 */}
-        <div className="page">
-          <div className="left-page">
-                <video
-                    src={MainVideo}
-                    className="background-video"
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    width="80%"
-                    height="auto"
-                />
-            <div className="title">덕수궁 돌담길에서 시작된 인연</div>
-            <div className="quote">“한 걸음 한 걸음, 인연은 운명처럼 찾아온다.”</div>
-          </div>
-        </div>
-
-        {/* 페이지 2: 오른쪽 페이지 - 텍스트 */}
-        <div className="page">
-          <div className="right-page">
-            <p>
-              그날은 가을이었고, 덕수궁 돌담길에 노랗게 물든 은행나무가 가득했어요.
-              그와 그녀는 처음 만났지만, 오래된 친구처럼 자연스럽게 이야기를 나눴어요.
-              길을 걸으며 서로의 꿈과 어린 시절 이야기를 나누던 그 순간,
-              이 사람과의 만남이 운명처럼 느껴졌죠.
-              돌담길 끝에서 그녀가 미소 지으며 손을 내밀었을 때,
-              그는 마음속에 깊은 울림을 느꼈습니다.
-            </p>
-          </div>
-        </div>
-
-        {/* 페이지 3: 왼쪽 페이지 - 애니메이션 및 제목 */}
-        <div className="page">
-          <div className="left-page">
-            <video
-                src={MainVideo}
-                className="background-video"
-                autoPlay
-                loop
-                muted
-                playsInline
-                width="80%"
-                height="auto"
-            />
-            <div className="title">새로운 이야기의 시작</div>
-            <div className="quote">“모든 끝은 새로운 시작을 의미한다.”</div>
-          </div>
-        </div>
-
-        {/* 페이지 4: 오른쪽 페이지 - 텍스트 */}
-        <div className="page">
-          <div className="right-page">
-            <p>
-              시간이 흘러 그들은 다시 그 길을 찾았습니다.
-              낙엽이 진 자리에는 새로운 싹이 돋아났고,
-              그들은 서로의 손을 잡고 새로운 미래를 꿈꾸기 시작했어요.
-              이 길은 이제 그들만의 특별한 장소가 되었고,
-              앞으로도 함께 걸어갈 약속의 길이 되었습니다.
-            </p>
-          </div>
-        </div>
-
-        {/* 페이지 5: 왼쪽 페이지 - 애니메이션 및 제목 */}
-        <div className="page">
-          <div className="left-page">
-                <video
-                    src={MainVideo}
-                    className="background-video"
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    width="80%"
-                    height="auto"
-                />
-            <div className="title">영원한 약속</div>
-            <div className="quote">“함께라면 두렵지 않아.”</div>
-          </div>
-        </div>
-
-        {/* 페이지 6: 오른쪽 페이지 - 텍스트 */}
-        <div className="page">
-          <div className="right-page">
-            <p>
-              계절이 바뀌어도 그들의 사랑은 변치 않았습니다.
-              매년 그 길을 걸으며 처음 만났던 순간을 되새기곤 했죠.
-              서로에게 가장 소중한 사람이 되어,
-              이제는 하나의 이야기를 함께 써 내려가고 있습니다.
-            </p>
-          </div>
-        </div>
-      </HTMLFlipBook>
-
-      {/* 네비게이션 아이콘 */}
-      <div className="navigation">
-        <img
-          src={ArrowLeft}
-          alt="Previous"
-          className="nav-icon left"
-          onClick={() => book.current.pageFlip().flipPrev()}
-        />
-        <img
-          src={ArrowRight}
-          alt="Next"
-          className="nav-icon right"
-          onClick={() => book.current.pageFlip().flipNext()}
-        />
-      </div>
-
-      {/* 하단 푸터 */}
-      <div className="footer">
-        <div className="brand">LIFERARY</div>
-      </div>
+      {/* 닫기 버튼 */}
+      <Link to="/gallary" className="close-button">
+        <span>닫기</span>
+      </Link>
     </div>
   );
+
 };
 
 export default Frame2;

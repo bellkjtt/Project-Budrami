@@ -100,7 +100,7 @@
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  padding: 0vh;
+  padding-left: 2vh;
   box-shadow: 0 0 1vw rgba(0, 0, 0, 0.1);
   border-radius: 3vw;
   position: relative;
@@ -121,6 +121,8 @@
   width: 80%;
   height: 80%;
   margin-bottom: 2vh;
+  margin-top: 8vh;
+  margin-left: 2vw;
   border-radius: 0.5vw;
 }
 
@@ -147,6 +149,8 @@
   text-align: left;
   max-width: 90%;
   margin: 2vh;
+  margin-top: 8vh;
+  border-radius: 0.5vw;
 }
 
 .navigation {
@@ -208,6 +212,17 @@
   cursor: pointer;
 }
 
+.background-image {
+  width: 80%;
+  height: 80%;
+  margin-bottom: 2vh;
+  border-radius: 0.5vw;
+  object-fit: cover; /* 비율 유지하며 채우기 */
+  margin-top: 8vh;
+  margin-left: 2vw;
+  border-radius: 0.5vw;
+}
+
 @media (max-width: 768px) {
   .button-container {
       flex-direction: column;
@@ -238,4 +253,6 @@
       width: 5vw;
       height: 5vw;
   }
+
+
 }
