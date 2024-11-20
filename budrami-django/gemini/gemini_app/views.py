@@ -128,7 +128,7 @@ prompt = ChatPromptTemplate.from_messages(
 
 # LLM(Language Model) 초기화
 # GPT-4를 사용하며, temperature를 0.2로 설정하여 일관된 응답 유도
-llm = ChatOpenAI(model='gpt-4o-mini', temperature=0.2)
+llm = ChatOpenAI(model='gpt-4o', temperature=0.2)
 chain = prompt | llm | StrOutputParser()
 # 세션 저장소 초기화
 store = {}
@@ -369,13 +369,13 @@ def process_speech(request):
             3: elderly_role,
         }
         
-        selected_role = role_dict.get(role_num, adult_role)
+        selected_role = role_dict.get(role_num, elderly_role)
 
         try:
             # 세션에서 count 가져오기 (초기값은 0)
             count = request.session.get('count', 0)
 
-            if count > 5:
+            if count > 10:
                 user_text = "#### 대화 종료 ####"
                 count = 0
 

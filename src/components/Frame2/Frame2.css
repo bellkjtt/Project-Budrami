@@ -33,7 +33,7 @@
   border-radius: 2vw 2vw 0 0;
   padding: 1vh 2vw;
   font-family: 'Yeon Sung', cursive;
-  font-size: clamp(16px, 0.9vw, 25px);
+  font-size: clamp(22px, 0.9vw, 22px);
   color: #424242;
   cursor: pointer;
   box-shadow: 0.2vw 0.2vw 0.5vw rgba(0, 0, 0, 0.3);
@@ -57,7 +57,7 @@
   border-radius: 2vw 2vw 0 0;
   padding: 1vh 1vw;
   font-family: 'Yeon Sung', cursive;
-  font-size: clamp(16px, 0.9vw, 25px);
+  font-size: clamp(22px, 0.9vw, 22px);
   color: #424242;
   cursor: pointer;
   box-shadow: 0.2vw 0.2vw 0.5vw rgba(0, 0, 0, 0.3);
@@ -228,6 +228,22 @@
   margin-top: 8vh;
   margin-left: 2vw;
   border-radius: 0.5vw;
+}
+
+/* Frame2.css에 추가할 스타일 */
+.bookmark-button.loading {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.bookmark-button.loading img {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
 }
 
 @media (max-width: 768px) {
