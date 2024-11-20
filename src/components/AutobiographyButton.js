@@ -24,6 +24,8 @@ const AutobiographyButton = ({ onAddCard }) => {
       const imagePrompt = data.image_prompt;
       const title = imagePrompt.title;
       const subtitle = imagePrompt.subtitle;
+      const text = imagePrompt.text;
+    
 
       const imageResponse = await fetch('http://127.0.0.1:8000/generate_image/', {
         method: 'POST',
@@ -37,6 +39,7 @@ const AutobiographyButton = ({ onAddCard }) => {
 
       const imageData = await imageResponse.json();
       const generatedImageUrl = imageData.image_url;
+      // const videoUrl = imagePrompt.video_url;
 
       const newCard = {
         id: idCounter, // 고유 ID 생성,
@@ -44,6 +47,7 @@ const AutobiographyButton = ({ onAddCard }) => {
         subtitle: subtitle,
         image: generatedImageUrl,
         video: null, // 비디오가 없으면 null로 설정
+        text : text,
       };
       
       onAddCard(newCard);

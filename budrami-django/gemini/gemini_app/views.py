@@ -264,40 +264,51 @@ def save_dialogues(request):
 def generate_image_prompt(dialogues):
     try:
         # 대화 내용을 하나의 텍스트로 결합
-        print(dialogues,'이게 전 대화')
         combined_text = " ".join([dialogue.content for dialogue in dialogues])
-        print(combined_text,'이게 대화')
         logging.debug(f"GPT 호출 입력 텍스트: {combined_text}")
 
         # Function 정의
+       # Function 정의
         functions = [
-            {
-                "name": "generate_image_prompt",
-                "description": "대화 내용을 바탕으로 이미지 프롬프트를 생성합니다. 완성된 description 예시는 다음과 같습니다. A serene post-war Korean village, children playing joyfully by a clear, sparkling stream under a warm sun, skipping stones and catching minnows, lush greenery and traditional Korean houses in the background, peaceful smiles, the essence of childhood innocence and hope amidst a landscape that has seen hardship, soft sunlight casting gentle shadows, vibrant yet calming colors, capturing the beauty of resilience and new beginnings. \n\n 또한 title의 예시는 다음과 같습니다. \n꿈과 사랑으로 일군 인생\n감사속에 피어난 아름다움\n가족과 함께 단란한 시간을",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "title": {
-                            "type": "string",
-                            "description": "대화를 요약해서 가장 맞는 타이틀"
-                        },
-                        "description": {
-                            "type": "string",
-                            "description": "이미지에 대한 세부 설명"
-                        },
-                        "subtitle": {
-                            "type": "string",
-                            "description": "title에 맞는 quote. 예시:'''가족과 이웃, 나를 지켜준 힘''' '''붓을 내려놓고, 가정을 품다.''' '''위기 속에서 하나 된 가족'''  "
-                        },
-                        "elements": {
-                            "type": "string",
-                            "description": "이미지에 포함될 주요 요소"
-                        }
-                    },
-                    "required": ["title", "description", "subtitle", "elements"]
+        {
+        "name": "generate_image_prompt",
+        "description": (
+            "대화 내용을 바탕으로 이미지 프롬프트를 생성합니다. "
+            "완성된 description(이미지 프롬프트) 예시는 다음과 같습니다. "
+            "```A serene post-war Korean village, children playing joyfully by a clear, sparkling stream under a warm sun,skipping stones and catching minnows, lush greenery and traditional Korean houses in the background, peaceful smiles, the essence of childhood innocence and hope amidst a landscape that has seen hardship, soft sunlight casting gentle shadows, vibrant yet calming colors, capturing the beauty of resilience and new beginnings.``` "
+            "또한 title의 예시들은 다음과 같습니다. "
+            "```꿈과 사랑으로 일군 인생``` ```감사속에 피어난 아름다움``` ```가족과 함께 단란한 시간을``` " 
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "title": {
+                    "type": "string",
+                    "description": "대화를 요약해서 가장 맞는 타이틀"
+                },
+                "description": {
+                    "type": "string",
+                    "description": "이미지에 대한 세부 설명"
+                },
+                "subtitle": {
+                    "type": "string",
+                    "description": (
+                        "title에 맞는 quote. 예시: '''가족과 이웃, 나를 지켜준 힘''' "
+                        "'''붓을 내려놓고, 가정을 품다.''' '''위기 속에서 하나 된 가족'''"
+                    )
+                },
+                "text": {
+                    "type": "string",
+                    "description": """이미지 프롬프트와 대화를 바탕으로 텍스트 내용을 생성합니다. 예시: ```중년이 되면서 내 삶의 중심은 가족이었다. 아이들이 자라나는 모습을 지켜보며 “너희는 무엇이든 할 수 있어”라는 말로 자신감을 키워주었다. 큰아들의 대학 합격은 지금도 가슴 벅찬 기억이다. 남편의 사업 실패로 어려움을 겪었지만, 가족이 힘을 합쳐 극복해냈다. 중년이 되며 삶에 여유를 찾고, 부모님을 더 잘 돌보지 못한 아쉬움이 남지만, 가족을 위해 헌신했던 시간이 나를 더 강하게 만들었다.``` 
+                    "```젊은 시절, 나는 미술 선생님이 되고 싶었다. 공원에서 혼자 풍경을 그리는 걸 좋아했고, 친구들에게 그림을 가르치는 것도 즐거웠다. 그러나 가정 형편 때문에 꿈을 이루지 못하고 결혼 후 남편과 아이들을 돌보는 것이 내 삶의 중심이 되었다. 경제적 어려움 속에서도 가족은 서로를 도우며 어려움을 극복했고, 그 과정에서 더 단단해졌다. 함께한 모든 순간이 내게는 소중한 보물이다.```"  
+                    """
                 }
+            },
+            "required": ["title", "description", "subtitle", "text"]
+            }
             }
         ]
+
 
         client = OpenAI(
             api_key=openai_api_key,  # This is the default and can be omitted
@@ -314,7 +325,7 @@ def generate_image_prompt(dialogues):
             functions=functions,
             function_call={"name": "generate_image_prompt"}  # 특정 함수 호출 강제
         )
-        print(response)
+
         logging.debug(f"GPT 응답: {response}")
         # print(response.choices[0].message.content,'')
         # GPT 응답에서 함수 호출 결과 추출
@@ -380,8 +391,6 @@ def process_speech(request):
             response = result
             count += 1
             request.session['count'] = count  # 세션에 count 업데이트
-            print(store)
-            print(selected_role)
             if role_num==3:
                 return JsonResponse({'response': response, 'step' : 4})
             return JsonResponse({'response': response})
@@ -495,7 +504,6 @@ def generate_image(request):
     """이미지 생성 및 다운로드 뷰"""
     try:
         logger.info("이미지 생성 프로세스 시작")
-        print(request)
 
         try:
             body = json.loads(request.body.decode('utf-8'))
@@ -574,20 +582,20 @@ def generate_image(request):
             remote_image_path = get_latest_file_path(ssh, settings.REMOTE_DIRECTORY)
             logger.info(f"원격 이미지 경로: {remote_image_path}")
             file_name = os.path.basename(remote_image_path)
-            print(file_name,'파일 이름')
+            
             local_image_path = os.path.join(local_directory, file_name).replace('\\', '/')
-            print(local_image_path,'합친 경로')
+            # print(local_image_path,'합친 경로')
             # 이미지 다운로드
             local_file_path = download_image_via_ssh(ssh, remote_image_path, local_image_path)
             logger.info(f"로컬 파일 경로: {local_file_path}")
 
             # 이미지 URL 생성
             image_url = request.build_absolute_uri(settings.MEDIA_URL + local_image_path)
-            print(image_url,'첫번쨰 URL')
+            # print(image_url,'첫번쨰 URL')
             image_url = image_url.replace('\\', '/')
-            print(image_url,'두번째 URL')
+            # print(image_url,'두번째 URL')
             generated_image_url = urljoin('http://127.0.0.1:8000/media/', image_url.split('media/')[-1])
-            print(generated_image_url,'세번쨰 URL')
+            #print(generated_image_url,'세번쨰 URL')
             logger.info(f"생성된 이미지 URL: {generated_image_url}")
 
             return JsonResponse({
