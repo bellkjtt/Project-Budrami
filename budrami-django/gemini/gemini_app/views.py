@@ -415,9 +415,11 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
-from cloudinary import uploader as cloudinary_uploader
+from cloudinary import config as cloudinary_config
+from cloudinary.uploader import upload as cloudinary_upload
 from lumaai import LumaAI
 from urllib.parse import urljoin
+import getpass
 
 
 ssh_server_ip = "185.150.27.254"  # Vast AI 서버의 공인 IP 주소
@@ -427,6 +429,27 @@ ssh_username = "root"
 remote_directory = "/workspace/ComfyUI/output"  # ComfyUI 출력 디렉토리
 local_directory = "./media/images"  # 로컬 저장 디렉토리
 os.makedirs(local_directory, exist_ok=True)
+
+api_key = os.getenv("LUMAAI_API_KEY")
+if not api_key:
+    raise ValueError("LUMAAI_API_KEY 환경 변수가 설정되어 있지 않습니다.")
+
+# LumaAI 클라이언트 설정
+client = LumaAI(auth_token=api_key)
+
+# Cloudinary 설정
+cloudinary_cloud_name = os.getenv('CLOUDINARY_CLOUD_NAME')
+cloudinary_api_key = os.getenv('CLOUDINARY_API_KEY')
+cloudinary_api_secret = os.getenv('CLOUDINARY_API_SECRET')
+if not all([cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret]):
+    raise ValueError("Cloudinary API 환경 변수가 설정되어 있지 않습니다.")
+
+cloudinary_config(
+    cloud_name=cloudinary_cloud_name,
+    api_key=cloudinary_api_key,
+    api_secret=cloudinary_api_secret
+)
+
 
 # 로깅 설정 강화
 logger = logging.getLogger(__name__)
@@ -499,8 +522,56 @@ def download_image_via_ssh(ssh, remote_path, local_path):
         logging.error(f"SSH로 이미지 다운로드 중 오류 발생: {e}")
         raise
 
+def generate_video_with_lumaai(cloudinary_url):
+    """LumaAI를 통해 비디오 생성하고 로컬에 다운로드"""
+    try:
+        generation = client.generations.create(
+            prompt="The person in the scene should have minimal movement, with gentle, subtle motions like breathing or slight head turns",
+            keyframes={
+                "frame0": {
+                    "type": "image",
+                    "url": cloudinary_url
+                }
+            }
+        )
+        logging.info("LumaAI를 통해 비디오 생성 중...")
+        completed = False
+        while not completed:
+            time.sleep(10)
+            generation = client.generations.get(id=generation.id)
+            if generation.state == "completed":
+                completed = True
+                video_url = generation.assets.video
+
+                # 비디오 다운로드
+                video_response = requests.get(video_url, stream=True)
+
+                # MEDIA_ROOT 경로 내 'video' 폴더에 비디오 파일 저장
+                video_folder = os.path.join(settings.MEDIA_ROOT, 'video')
+                if not os.path.exists(video_folder):
+                    os.makedirs(video_folder)  # 'video' 폴더가 없다면 생성
+
+                video_path = os.path.join(video_folder, f"{generation.id}.mp4")
+                with open(video_path, 'wb') as video_file:
+                    for chunk in video_response.iter_content(chunk_size=1024):
+                        if chunk:
+                            video_file.write(chunk)
+                logging.info(f"비디오가 로컬에 다운로드되었습니다: {video_path}")
+                return video_path
+            elif generation.state == "failed":
+                raise RuntimeError(f"비디오 생성 실패: {generation.failure_reason}")
+            else:
+                logging.info("비디오 생성 중... 잠시만 기다려주세요.")
+    except Exception as e:
+        logging.error(f"LumaAI 비디오 생성 중 오류 발생: {e}")
+        raise
+
+
+
+ge_count = 2
 @csrf_exempt
 def generate_image(request):
+    global ge_count
     """이미지 생성 및 다운로드 뷰"""
     try:
         logger.info("이미지 생성 프로세스 시작")
@@ -589,6 +660,10 @@ def generate_image(request):
             local_file_path = download_image_via_ssh(ssh, remote_image_path, local_image_path)
             logger.info(f"로컬 파일 경로: {local_file_path}")
 
+            upload_result = cloudinary_upload(local_image_path, public_id='test_image', overwrite=True)
+            cloudinary_url = upload_result['secure_url']
+            logging.info(f"Cloudinary에 이미지 업로드 완료: {cloudinary_url}")
+            ge_count +=1
             # 이미지 URL 생성
             image_url = request.build_absolute_uri(settings.MEDIA_URL + local_image_path)
             # print(image_url,'첫번쨰 URL')
@@ -597,11 +672,17 @@ def generate_image(request):
             generated_image_url = urljoin('http://127.0.0.1:8000/media/', image_url.split('media/')[-1])
             #print(generated_image_url,'세번쨰 URL')
             logger.info(f"생성된 이미지 URL: {generated_image_url}")
-
+            video_path = generate_video_with_lumaai(cloudinary_url)
+            video_url = request.build_absolute_uri(settings.MEDIA_URL + 'video/' + os.path.basename(video_path))
+            print(video_path,video_url)
+            
             return JsonResponse({
+                'id' : ge_count,
                 'status': 'success',
-                'image_url': generated_image_url
+                'image_url': generated_image_url,
+                'video_url' : video_url,
             })
+
 
         except Exception as e:
             logger.error(f"이미지 처리 중 오류 발생: {str(e)}")

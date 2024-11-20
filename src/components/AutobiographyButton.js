@@ -39,14 +39,14 @@ const AutobiographyButton = ({ onAddCard }) => {
 
       const imageData = await imageResponse.json();
       const generatedImageUrl = imageData.image_url;
-      // const videoUrl = imagePrompt.video_url;
+      const videoUrl = imageData.video_url;
 
       const newCard = {
-        id: idCounter, // 고유 ID 생성,
+        id: imageData.id, // 고유 ID 생성,
         title: title,
         subtitle: subtitle,
         image: generatedImageUrl,
-        video: null, // 비디오가 없으면 null로 설정
+        video: videoUrl, // 비디오가 없으면 null로 설정
         text : text,
       };
       

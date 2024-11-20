@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './StepTracker.css';
 import AutobiographyButton from './AutobiographyButton';
 
-const stepsData = ["유년기", "청년기", "중년기", "장년기"];
+const stepsData = ["유년기", "청년기", "중년기", "노년기"];
 
 const StepTracker = ({ setCurrentStep, currentStep }) => {
   // useEffect(() => {
