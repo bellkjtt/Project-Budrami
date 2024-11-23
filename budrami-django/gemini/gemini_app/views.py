@@ -128,7 +128,7 @@ prompt = ChatPromptTemplate.from_messages(
 
 # LLM(Language Model) 초기화
 # GPT-4를 사용하며, temperature를 0.2로 설정하여 일관된 응답 유도
-llm = ChatOpenAI(model='gpt-4o-mini', temperature=0.2)
+llm = ChatOpenAI(model='gpt-4o', temperature=0.2)
 chain = prompt | llm | StrOutputParser()
 # 세션 저장소 초기화
 store = {}
@@ -264,40 +264,51 @@ def save_dialogues(request):
 def generate_image_prompt(dialogues):
     try:
         # 대화 내용을 하나의 텍스트로 결합
-        print(dialogues,'이게 전 대화')
         combined_text = " ".join([dialogue.content for dialogue in dialogues])
-        print(combined_text,'이게 대화')
         logging.debug(f"GPT 호출 입력 텍스트: {combined_text}")
 
         # Function 정의
+       # Function 정의
         functions = [
-            {
-                "name": "generate_image_prompt",
-                "description": "대화 내용을 바탕으로 이미지 프롬프트를 생성합니다. 완성된 description 예시는 다음과 같습니다. A serene post-war Korean village, children playing joyfully by a clear, sparkling stream under a warm sun, skipping stones and catching minnows, lush greenery and traditional Korean houses in the background, peaceful smiles, the essence of childhood innocence and hope amidst a landscape that has seen hardship, soft sunlight casting gentle shadows, vibrant yet calming colors, capturing the beauty of resilience and new beginnings. \n\n 또한 title의 예시는 다음과 같습니다. \n꿈과 사랑으로 일군 인생\n감사속에 피어난 아름다움\n가족과 함께 단란한 시간을",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "title": {
-                            "type": "string",
-                            "description": "대화를 요약해서 가장 맞는 타이틀"
-                        },
-                        "description": {
-                            "type": "string",
-                            "description": "이미지에 대한 세부 설명"
-                        },
-                        "subtitle": {
-                            "type": "string",
-                            "description": "title에 맞는 quote. 예시:'''가족과 이웃, 나를 지켜준 힘''' '''붓을 내려놓고, 가정을 품다.''' '''위기 속에서 하나 된 가족'''  "
-                        },
-                        "elements": {
-                            "type": "string",
-                            "description": "이미지에 포함될 주요 요소"
-                        }
-                    },
-                    "required": ["title", "description", "subtitle", "elements"]
+        {
+        "name": "generate_image_prompt",
+        "description": (
+            "대화 내용을 바탕으로 이미지 프롬프트를 생성합니다. "
+            "완성된 description(이미지 프롬프트) 예시는 다음과 같습니다. "
+            "```A serene post-war Korean village, children playing joyfully by a clear, sparkling stream under a warm sun,skipping stones and catching minnows, lush greenery and traditional Korean houses in the background, peaceful smiles, the essence of childhood innocence and hope amidst a landscape that has seen hardship, soft sunlight casting gentle shadows, vibrant yet calming colors, capturing the beauty of resilience and new beginnings.``` "
+            "또한 title의 예시들은 다음과 같습니다. "
+            "```꿈과 사랑으로 일군 인생``` ```감사속에 피어난 아름다움``` ```가족과 함께 단란한 시간을``` " 
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "title": {
+                    "type": "string",
+                    "description": "대화를 요약해서 가장 맞는 타이틀"
+                },
+                "description": {
+                    "type": "string",
+                    "description": "이미지에 대한 세부 설명"
+                },
+                "subtitle": {
+                    "type": "string",
+                    "description": (
+                        "title에 맞는 quote. 예시: '''가족과 이웃, 나를 지켜준 힘''' "
+                        "'''붓을 내려놓고, 가정을 품다.''' '''위기 속에서 하나 된 가족'''"
+                    )
+                },
+                "text": {
+                    "type": "string",
+                    "description": """이미지 프롬프트와 대화를 바탕으로 텍스트 내용을 생성합니다. 예시: ```중년이 되면서 내 삶의 중심은 가족이었다. 아이들이 자라나는 모습을 지켜보며 “너희는 무엇이든 할 수 있어”라는 말로 자신감을 키워주었다. 큰아들의 대학 합격은 지금도 가슴 벅찬 기억이다. 남편의 사업 실패로 어려움을 겪었지만, 가족이 힘을 합쳐 극복해냈다. 중년이 되며 삶에 여유를 찾고, 부모님을 더 잘 돌보지 못한 아쉬움이 남지만, 가족을 위해 헌신했던 시간이 나를 더 강하게 만들었다.``` 
+                    "```젊은 시절, 나는 미술 선생님이 되고 싶었다. 공원에서 혼자 풍경을 그리는 걸 좋아했고, 친구들에게 그림을 가르치는 것도 즐거웠다. 그러나 가정 형편 때문에 꿈을 이루지 못하고 결혼 후 남편과 아이들을 돌보는 것이 내 삶의 중심이 되었다. 경제적 어려움 속에서도 가족은 서로를 도우며 어려움을 극복했고, 그 과정에서 더 단단해졌다. 함께한 모든 순간이 내게는 소중한 보물이다.```"  
+                    """
                 }
+            },
+            "required": ["title", "description", "subtitle", "text"]
+            }
             }
         ]
+
 
         client = OpenAI(
             api_key=openai_api_key,  # This is the default and can be omitted
@@ -314,7 +325,7 @@ def generate_image_prompt(dialogues):
             functions=functions,
             function_call={"name": "generate_image_prompt"}  # 특정 함수 호출 강제
         )
-        print(response)
+
         logging.debug(f"GPT 응답: {response}")
         # print(response.choices[0].message.content,'')
         # GPT 응답에서 함수 호출 결과 추출
@@ -358,13 +369,13 @@ def process_speech(request):
             3: elderly_role,
         }
         
-        selected_role = role_dict.get(role_num, adult_role)
+        selected_role = role_dict.get(role_num, elderly_role)
 
         try:
             # 세션에서 count 가져오기 (초기값은 0)
             count = request.session.get('count', 0)
 
-            if count > 5:
+            if count > 10:
                 user_text = "#### 대화 종료 ####"
                 count = 0
 
@@ -380,8 +391,6 @@ def process_speech(request):
             response = result
             count += 1
             request.session['count'] = count  # 세션에 count 업데이트
-            print(store)
-            print(selected_role)
             if role_num==3:
                 return JsonResponse({'response': response, 'step' : 4})
             return JsonResponse({'response': response})
@@ -406,9 +415,11 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
-from cloudinary import uploader as cloudinary_uploader
+from cloudinary import config as cloudinary_config
+from cloudinary.uploader import upload as cloudinary_upload
 from lumaai import LumaAI
 from urllib.parse import urljoin
+import getpass
 
 
 ssh_server_ip = "185.150.27.254"  # Vast AI 서버의 공인 IP 주소
@@ -418,6 +429,27 @@ ssh_username = "root"
 remote_directory = "/workspace/ComfyUI/output"  # ComfyUI 출력 디렉토리
 local_directory = "./media/images"  # 로컬 저장 디렉토리
 os.makedirs(local_directory, exist_ok=True)
+
+api_key = os.getenv("LUMAAI_API_KEY")
+if not api_key:
+    raise ValueError("LUMAAI_API_KEY 환경 변수가 설정되어 있지 않습니다.")
+
+# LumaAI 클라이언트 설정
+client = LumaAI(auth_token=api_key)
+
+# Cloudinary 설정
+cloudinary_cloud_name = os.getenv('CLOUDINARY_CLOUD_NAME')
+cloudinary_api_key = os.getenv('CLOUDINARY_API_KEY')
+cloudinary_api_secret = os.getenv('CLOUDINARY_API_SECRET')
+if not all([cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret]):
+    raise ValueError("Cloudinary API 환경 변수가 설정되어 있지 않습니다.")
+
+cloudinary_config(
+    cloud_name=cloudinary_cloud_name,
+    api_key=cloudinary_api_key,
+    api_secret=cloudinary_api_secret
+)
+
 
 # 로깅 설정 강화
 logger = logging.getLogger(__name__)
@@ -490,12 +522,59 @@ def download_image_via_ssh(ssh, remote_path, local_path):
         logging.error(f"SSH로 이미지 다운로드 중 오류 발생: {e}")
         raise
 
+def generate_video_with_lumaai(cloudinary_url):
+    """LumaAI를 통해 비디오 생성하고 로컬에 다운로드"""
+    try:
+        generation = client.generations.create(
+            prompt="The person in the scene should have minimal movement, with gentle, subtle motions like breathing or slight head turns",
+            keyframes={
+                "frame0": {
+                    "type": "image",
+                    "url": cloudinary_url
+                }
+            }
+        )
+        logging.info("LumaAI를 통해 비디오 생성 중...")
+        completed = False
+        while not completed:
+            time.sleep(10)
+            generation = client.generations.get(id=generation.id)
+            if generation.state == "completed":
+                completed = True
+                video_url = generation.assets.video
+
+                # 비디오 다운로드
+                video_response = requests.get(video_url, stream=True)
+
+                # MEDIA_ROOT 경로 내 'video' 폴더에 비디오 파일 저장
+                video_folder = os.path.join(settings.MEDIA_ROOT, 'video')
+                if not os.path.exists(video_folder):
+                    os.makedirs(video_folder)  # 'video' 폴더가 없다면 생성
+
+                video_path = os.path.join(video_folder, f"{generation.id}.mp4")
+                with open(video_path, 'wb') as video_file:
+                    for chunk in video_response.iter_content(chunk_size=1024):
+                        if chunk:
+                            video_file.write(chunk)
+                logging.info(f"비디오가 로컬에 다운로드되었습니다: {video_path}")
+                return video_path
+            elif generation.state == "failed":
+                raise RuntimeError(f"비디오 생성 실패: {generation.failure_reason}")
+            else:
+                logging.info("비디오 생성 중... 잠시만 기다려주세요.")
+    except Exception as e:
+        logging.error(f"LumaAI 비디오 생성 중 오류 발생: {e}")
+        raise
+
+
+
+ge_count = 2
 @csrf_exempt
 def generate_image(request):
+    global ge_count
     """이미지 생성 및 다운로드 뷰"""
     try:
         logger.info("이미지 생성 프로세스 시작")
-        print(request)
 
         try:
             body = json.loads(request.body.decode('utf-8'))
@@ -574,26 +653,36 @@ def generate_image(request):
             remote_image_path = get_latest_file_path(ssh, settings.REMOTE_DIRECTORY)
             logger.info(f"원격 이미지 경로: {remote_image_path}")
             file_name = os.path.basename(remote_image_path)
-            print(file_name,'파일 이름')
+            
             local_image_path = os.path.join(local_directory, file_name).replace('\\', '/')
-            print(local_image_path,'합친 경로')
+            # print(local_image_path,'합친 경로')
             # 이미지 다운로드
             local_file_path = download_image_via_ssh(ssh, remote_image_path, local_image_path)
             logger.info(f"로컬 파일 경로: {local_file_path}")
 
+            upload_result = cloudinary_upload(local_image_path, public_id='test_image', overwrite=True)
+            cloudinary_url = upload_result['secure_url']
+            logging.info(f"Cloudinary에 이미지 업로드 완료: {cloudinary_url}")
+            ge_count +=1
             # 이미지 URL 생성
             image_url = request.build_absolute_uri(settings.MEDIA_URL + local_image_path)
-            print(image_url,'첫번쨰 URL')
+            # print(image_url,'첫번쨰 URL')
             image_url = image_url.replace('\\', '/')
-            print(image_url,'두번째 URL')
+            # print(image_url,'두번째 URL')
             generated_image_url = urljoin('http://127.0.0.1:8000/media/', image_url.split('media/')[-1])
-            print(generated_image_url,'세번쨰 URL')
+            #print(generated_image_url,'세번쨰 URL')
             logger.info(f"생성된 이미지 URL: {generated_image_url}")
-
+            video_path = generate_video_with_lumaai(cloudinary_url)
+            video_url = request.build_absolute_uri(settings.MEDIA_URL + 'video/' + os.path.basename(video_path))
+            print(video_path,video_url)
+            
             return JsonResponse({
+                'id' : ge_count,
                 'status': 'success',
-                'image_url': generated_image_url
+                'image_url': generated_image_url,
+                'video_url' : video_url,
             })
+
 
         except Exception as e:
             logger.error(f"이미지 처리 중 오류 발생: {str(e)}")
