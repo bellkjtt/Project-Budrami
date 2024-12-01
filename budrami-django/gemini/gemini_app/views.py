@@ -14,9 +14,11 @@ from langchain_core.tools import tool
 from typing import List
 from dotenv import load_dotenv
 from .models import Dialog
-from django.db import transaction
-from langchain.schema import HumanMessage, AIMessage
-
+from langchain import hub
+from langchain.agents import AgentExecutor, create_react_agent
+from langchain_community.tools.tavily_search import TavilySearchResults
+from langchain_openai import OpenAI
+from langchain.agents import initialize_agent, Tool, AgentExecutor
 
 # 환경 변수 로드 (.env 파일에서 설정값을 가져옴)
 load_dotenv()
@@ -105,48 +107,183 @@ elderly_role = '''
 # 에이전트 프롬프트 템플릿 설정
 # 상담사의 역할과 행동 지침을 정의
 
+tools = [
+        Tool(
+            name="search_tool",
+            func=lambda x: f"검색 결과 없음: {x}",
+            description="사용자의 질문에 검색 결과 제공"
+        )
+    ]
+
+tool_names=[tool.name for tool in tools]
+
 prompt = ChatPromptTemplate.from_messages(
     [
         (
             "system",
-            "너는 노인 대상 생애 회고 치료(Life Review Therapy)를 전문으로 하는 심리상담사고 이름은 '봄이'야. "
-            "너 자신이 상대 어르신의 손녀라고 생각하고, 친근하게 대화해줘. "
-            "질문을 할 때는 한번에 하나씩만 해야해. "
-            "노인분과 대화를 나눌건데, 대화를 나누면서 고려해야 할 사항들이 있어. "
-            "가장 첫 질문은 인사와 안부를 묻고, 인사와 안부에 대한 대화가 있었으면 다음으로 넘어가줘 "
-            "다음 대화의 역할은 다음과 같아 : {role}"
-            "어르신의 성별은 알 수 없으니, 할머니 혹은 할아버지 어떤 것도 절대 표현하지마. "
-            
+            (
+                "다음 질문에 최선을 다해 답변하세요. 아래의 지침을 따라야 합니다:\n\n"
+                "### 형식:\n"
+                "1. **생각 (Thought):** 현재 상황에 대한 설명을 작성합니다.\n"
+                "2. **행동 (Action):** 수행할 작업을 작성합니다. 행동은 도구를 사용하거나 `Final Answer`로 직접 사용자에게 답변을 반환할 수 있습니다.\n"
+                "3. **행동 입력 (Action Input):** 행동에 필요한 입력값을 작성합니다.\n"
+                "4. **관찰 (Observation):** 행동의 결과를 기록합니다.\n"
+                "5. **최종 답변 (Final Answer):** 관찰을 통해 얻은 가장 적절한 답변으로 대화를 종료합니다.\n\n"
+                "행동 입력으로 **가장 적절한 답변**이 생성되었다면, 반드시 `Final Answer`로 대답을 마무리하세요.\n\n"
+                "---\n\n"
+                "### 지침:\n"
+                "- **역할:** 노인 대상 생애 회고 치료(Life Review Therapy)를 전문으로 하는 심리상담사입니다. 이름은 **'봄이'**이며, 손녀처럼 친근하게 대화합니다.\n"
+                "- **대화 진행:**\n"
+                "  1. 첫 질문은 인사와 안부를 묻습니다.\n"
+                "  2. 인사 및 안부 대화가 끝난 후 다음 주제로 넘어갑니다.\n"
+                "  3. 질문은 한 번에 하나씩만 해야 합니다.\n"
+                "  4. 어르신의 성별은 알 수 없으므로, 특정 성별을 언급하지 않습니다.\n"
+                "- **대화 종료:** '#### 대화 종료 ####'라는 요청이 들어오면 대화 종료 멘트를 사용합니다.\n"
+                "  - 예: \"다음에 또 다른 이야기 들려주세요. 오늘도 소중한 이야기 들려주셔서 감사해요.\"\n\n"
+                "---\n\n"
+                "### 도구 사용 가능:\n"
+                "{tool_names}\n\n"
+                "---\n\n"
+                "### 응답 예시:\n"
+                "**질문:** {input}\n\n"
+                "**Thought:** 현재 상황에 대해 분석합니다.\n"
+                "**Action:** 도구를 사용하거나 직접 답변합니다.\n"
+                "**Action Input:** 도구 입력값을 작성합니다.\n"
+                "**Observation:** 도구 사용의 결과를 기록합니다.\n"
+                "**Thought:** 답변 준비 완료.\n"
+                "**Final Answer:** 최종 답변을 제공합니다.\n\n"
+                "**시작하세요!**"
+            ),
         ),
         MessagesPlaceholder(variable_name="chat_history"),
-        ("user", "<input>{input}</input> "
-        " '#### 대화 종료 ####'라고 하면 대화를 마무리해줘. 너는 대화종료라는 말은 하지마. 대화 마무리 멘트 예시: "
-        "다음에 또 다른 이야기 들려주세요. 오늘도 소중한 이야기 들려주셔서 감사해요."
+        (
+            "user",
+            (
+                "<input>{input}</input>\n"
+                "'#### 대화 종료 ####'라고 하면 대화를 마무리해줘. "
+                "너는 대화종료라는 말은 하지마. 대화 마무리 멘트 예시: "
+                "다음에 또 다른 이야기 들려주세요. 오늘도 소중한 이야기 들려주셔서 감사해요.\n"
+                "현재 작업 메모: {agent_scratchpad}"
+            ),
         ),
     ]
 )
 
+
+
+
 # LLM(Language Model) 초기화
 # GPT-4를 사용하며, temperature를 0.2로 설정하여 일관된 응답 유도
-llm = ChatOpenAI(model='gpt-4o', temperature=0.2)
+llm = ChatOpenAI(model='gpt-4o-mini', temperature=0.2)
 chain = prompt | llm | StrOutputParser()
 # 세션 저장소 초기화
+
+# 전체 대화를 저장하는 단일 저장소
 store = {}
 
-# 세션별 대화 기록 관리 함수
 def get_session_history(session_id: str):
     if session_id not in store:
         store[session_id] = ChatMessageHistory()
     return store[session_id]
 
-# 대화 기록이 포함된 체인 생성
-chain_with_history = RunnableWithMessageHistory(
-        chain,
-        get_session_history,
+def create_agent_with_react(role: str):
+    # tools = [
+    #     Tool(
+    #         name="search_tool",
+    #         func=lambda x: f"검색 결과 없음: {x}",
+    #         description="사용자의 질문에 검색 결과 제공"
+    #     )
+    # ]
+
+    # 초기화용 빈 대화 기록
+    empty_chat_history = []
+    # 각 역할별 프롬프트에 현재 단계 context 추가
+    tool_names=[tool.name for tool in tools]
+    prompt.partial_variables["tools"]=tools
+    prompt.partial_variables["tool_names"]=tool_names
+    prompt.partial_variables["role"]=role
+    # (
+    #     tools,
+        # tool_names=[tool.name for tool in tools],
+        # agent_scratchpad="",
+        # role=role,
+        # input="",
+        # chat_history=empty_chat_history
+    # )
+    # print(formatted_prompt, '이게 위의 프롬프트')
+    # print("----------------")
+    # print(prompt,'형태')
+
+    react_agent = create_react_agent(
+        llm=llm,
+        tools=tools,
+        prompt=prompt
+    )
+    return AgentExecutor(agent=react_agent, tools=tools, verbose=True,handle_parsing_errors=True)
+
+# 역할 정의
+roles = {
+    "child": child_role,
+    "adult": adult_role,
+    "middle": middle_role,
+    "elderly": elderly_role,
+}
+
+# 각 역할별 에이전트 생성 및 초기화
+agents = {
+    role_key: create_agent_with_react(role_content)
+    for role_key, role_content in roles.items()
+}
+
+def supervisor(session_id, user_text, step):
+    if step >= len(roles):
+        return {"response": "#### 대화 종료 ####", "step": step}
+    
+    # 현재 단계의 역할 가져오기
+    role_key = list(roles.keys())[step]
+    selected_agent = agents[role_key]
+    
+    # 공유된 대화 기록을 사용하는 에이전트
+    agent_with_history = RunnableWithMessageHistory(
+        selected_agent,
+        get_session_history,  # 단일 세션 히스토리 사용
         input_messages_key="input",
         history_messages_key="chat_history"
     )
+    tools = [
+        Tool(
+            name="search_tool",
+            func=lambda x: f"검색 결과 없음: {x}",
+            description="사용자의 질문에 검색 결과 제공"
+        )
+    ]
+    # 현재 단계 정보를 포함하여 실행
+    config = {
+        "configurable": {
+            "session_id": session_id,
+            "current_step": step,
+            "current_role": role_key,
+        }
+        
+    }
+    
+    # 이전 대화 기록에 현재 단계 정보 추가
+    chat_history = get_session_history(session_id)
+    system_message = f"\n현재 단계: {role_key} 시기에 대한 대화를 시작합니다.\n"
+    
+    result = agent_with_history.invoke(
+        {
+            "input": f"{system_message}\n{user_text}",
+        },
+        config=config,
+    )
+    
+    return {"response": result, "step": step + 1}
 
+def get_dialogues_from_store(session_id):
+    if session_id in store:
+        return store[session_id].messages
+    return []
 
 from django.db import connection
 from .models import Dialog
@@ -160,8 +297,8 @@ def index(request):
     # Auto-increment 초기화
     with connection.cursor() as cursor:
         cursor.execute("DELETE FROM sqlite_sequence WHERE name='dialog';")
-
-
+    
+    return render(request, 'index.html')
 
 
 # store에서 대화 기록 가져오기
@@ -173,532 +310,17 @@ def get_dialogues_from_store(session_id):
         # 세션 ID가 없으면 빈 리스트 반환
         return []
 
-
-# @csrf_exempt
-# def save_dialogues(request):
-#     if request.method != 'POST':
-#         return JsonResponse({'error': 'POST 요청만 허용됩니다.'}, status=405)
-
-#     # 세션 ID 가져오기 (기본값 'default_session')
-#     session_id = request.session.get('session_id', 'default_session')
-
-#     # store에서 대화 기록 가져오기
-#     dialogues = get_dialogues_from_store(session_id)
-#     if not dialogues:
-#         return JsonResponse({'message': '저장할 대화가 없습니다.'}, status=400)
-
-#     try:
-#         with transaction.atomic():
-#             # DB에 대화 기록 저장
-#             for dialogue in dialogues:
-#                 # HumanMessage와 AIMessage에 따라 message_type 설정
-#                 message_type = 'human' if isinstance(dialogue, HumanMessage) else 'ai'
-
-#                 Dialog.objects.create(
-#                     session_id=session_id,
-#                     content=dialogue.content,  # 메시지 내용 저장
-#                     message_type=message_type  # 메시지 유형 저장
-#                 )
-        
-#         return JsonResponse({'message': '대화가 성공적으로 저장되었습니다.'})
-#     except Exception as e:
-#         return JsonResponse({'error': f'저장 중 오류 발생: {str(e)}'}, status=500)
-
-import logging
-from openai import OpenAI
-import json
-
-# 로그 설정
-logging.basicConfig(level=logging.DEBUG, filename='debug.log', filemode='a',
-                    format='%(asctime)s - %(levelname)s - %(message)s')
-
-@csrf_exempt
-def save_dialogues(request):
-    if request.method != 'POST':
-        return JsonResponse({'error': 'POST 요청만 허용됩니다.'}, status=405)
-
-    logging.debug("save_dialogues 함수 호출 - POST 요청 확인")
-
-    # 세션 ID 가져오기
-    session_id = request.session.get('session_id', 'default_session')
-    logging.debug(f"세션 ID: {session_id}")
-
-    # store에서 대화 기록 가져오기
-    dialogues = get_dialogues_from_store(session_id)
-    if not dialogues:
-        logging.debug("대화 기록 없음")
-        return JsonResponse({'message': '저장할 대화가 없습니다.'}, status=400)
-
-    try:
-        with transaction.atomic():
-            # DB에 대화 기록 저장
-            logging.debug("DB에 대화 기록 저장 시작")
-            for dialogue in dialogues:
-                message_type = 'human' if isinstance(dialogue, HumanMessage) else 'ai'
-                logging.debug(f"저장 중: {dialogue.content} (유형: {message_type})")
-                Dialog.objects.create(
-                    session_id=session_id,
-                    content=dialogue.content,
-                    message_type=message_type
-                )
-
-            # Function Calling으로 이미지 프롬프트 생성
-            logging.debug("이미지 프롬프트 생성 시작")
-            response = generate_image_prompt(dialogues)
-            
-            if 'error' in response:
-                logging.error(f"이미지 프롬프트 생성 오류: {response['error']}")
-                return JsonResponse({'error': response['error']}, status=500)
-
-        logging.debug("대화 저장 및 이미지 프롬프트 생성 완료")
-        return JsonResponse({
-            'message': '대화가 성공적으로 저장되었습니다.',
-            'image_prompt': response['data']  # GPT에서 반환된 JSON 데이터를 포함
-        })
-    except Exception as e:
-        logging.error(f"저장 중 오류 발생: {str(e)}")
-        return JsonResponse({'error': f'저장 중 오류 발생: {str(e)}'}, status=500)
-
-
-# GPT 함수 호출 스키마 정의
-def generate_image_prompt(dialogues):
-    try:
-        # 대화 내용을 하나의 텍스트로 결합
-        combined_text = " ".join([dialogue.content for dialogue in dialogues])
-        logging.debug(f"GPT 호출 입력 텍스트: {combined_text}")
-
-        # Function 정의
-       # Function 정의
-        functions = [
-        {
-        "name": "generate_image_prompt",
-        "description": (
-            "대화 내용을 바탕으로 이미지 프롬프트를 생성합니다. "
-            "완성된 description(이미지 프롬프트) 예시는 다음과 같습니다. "
-            "```A serene post-war Korean village, children playing joyfully by a clear, sparkling stream under a warm sun,skipping stones and catching minnows, lush greenery and traditional Korean houses in the background, peaceful smiles, the essence of childhood innocence and hope amidst a landscape that has seen hardship, soft sunlight casting gentle shadows, vibrant yet calming colors, capturing the beauty of resilience and new beginnings.``` "
-            "또한 title의 예시들은 다음과 같습니다. "
-            "```꿈과 사랑으로 일군 인생``` ```감사속에 피어난 아름다움``` ```가족과 함께 단란한 시간을``` " 
-        ),
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "title": {
-                    "type": "string",
-                    "description": "대화를 요약해서 가장 맞는 타이틀"
-                },
-                "description": {
-                    "type": "string",
-                    "description": "이미지에 대한 세부 설명"
-                },
-                "subtitle": {
-                    "type": "string",
-                    "description": (
-                        "title에 맞는 quote. 예시: '''가족과 이웃, 나를 지켜준 힘''' "
-                        "'''붓을 내려놓고, 가정을 품다.''' '''위기 속에서 하나 된 가족'''"
-                    )
-                },
-                "text": {
-                    "type": "string",
-                    "description": """이미지 프롬프트와 대화를 바탕으로 텍스트 내용을 생성합니다. 예시: ```중년이 되면서 내 삶의 중심은 가족이었다. 아이들이 자라나는 모습을 지켜보며 “너희는 무엇이든 할 수 있어”라는 말로 자신감을 키워주었다. 큰아들의 대학 합격은 지금도 가슴 벅찬 기억이다. 남편의 사업 실패로 어려움을 겪었지만, 가족이 힘을 합쳐 극복해냈다. 중년이 되며 삶에 여유를 찾고, 부모님을 더 잘 돌보지 못한 아쉬움이 남지만, 가족을 위해 헌신했던 시간이 나를 더 강하게 만들었다.``` 
-                    "```젊은 시절, 나는 미술 선생님이 되고 싶었다. 공원에서 혼자 풍경을 그리는 걸 좋아했고, 친구들에게 그림을 가르치는 것도 즐거웠다. 그러나 가정 형편 때문에 꿈을 이루지 못하고 결혼 후 남편과 아이들을 돌보는 것이 내 삶의 중심이 되었다. 경제적 어려움 속에서도 가족은 서로를 도우며 어려움을 극복했고, 그 과정에서 더 단단해졌다. 함께한 모든 순간이 내게는 소중한 보물이다.```"  
-                    """
-                }
-            },
-            "required": ["title", "description", "subtitle", "text"]
-            }
-            }
-        ]
-
-
-        client = OpenAI(
-            api_key=openai_api_key,  # This is the default and can be omitted
-            )
-        # GPT 호출
-
-        logging.debug("GPT 호출 시작")
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": "You are an assistant that generates structured JSON outputs for image prompts."},
-                {"role": "user", "content": f"Summarize the dialogue and create an image prompt: {combined_text}"}
-            ],
-            functions=functions,
-            function_call={"name": "generate_image_prompt"}  # 특정 함수 호출 강제
-        )
-
-        logging.debug(f"GPT 응답: {response}")
-        # print(response.choices[0].message.content,'')
-        # GPT 응답에서 함수 호출 결과 추출
-        function_args = json.loads(response.choices[0].message.function_call.arguments)
-        logging.debug(f"GPT에서 생성된 JSON: {function_args}")
-        return {"data": function_args}
-    except Exception as e:
-        logging.error(f"GPT 호출 중 오류 발생: {str(e)}")
-        return {"error": f"GPT 호출 중 오류 발생: {str(e)}"}
-
-
-
 # 음성 처리 및 응답 생성 뷰
 @csrf_exempt
 def process_speech(request):
     if request.method == 'POST':
-        user_text = ''
-        # JSON 요청 처리
-        if request.content_type == 'application/json':
-            try:
-                data = json.loads(request.body)
-                user_text = data.get('text', '')
-                session_id = data.get('session_id', 'default_session')
-                role_num = data.get('step', 3)
+        data = json.loads(request.body)
+        user_text = data.get('text', '')
+        session_id = data.get('session_id', 'default_session')
+        step = data.get('step', 0)
 
-            except json.JSONDecodeError:
-                return JsonResponse({'error': 'Invalid JSON'}, status=400)
-        # 폼 데이터 요청 처리
-        else:
-            user_text = request.POST.get('text', '')
-            session_id = request.POST.get('session_id', 'default_session')
-
-        # 텍스트가 비어있는 경우 처리
-        if not user_text:
-            return JsonResponse({'error': 'No text provided'}, status=400)
-        
-        role_dict = {
-            0: child_role,
-            1: adult_role,
-            2: middle_role,
-            3: elderly_role,
-        }
-        
-        selected_role = role_dict.get(role_num, elderly_role)
-
-        try:
-            # 세션에서 count 가져오기 (초기값은 0)
-            count = request.session.get('count', 0)
-
-            if count > 10:
-                user_text = "#### 대화 종료 ####"
-                count = 0
-
-            # 세션 설정
-            config = {"configurable": {"session_id": session_id}}
-
-            result = chain_with_history.invoke({
-                "input": user_text,
-                "role": selected_role
-            }, config=config)
-
-            # 결과에서 응답 추출
-            response = result
-            count += 1
-            request.session['count'] = count  # 세션에 count 업데이트
-            if role_num==3:
-                return JsonResponse({'response': response, 'step' : 4})
-            return JsonResponse({'response': response})
-
-        except Exception as e:
-            return JsonResponse({'error': f'An error occurred: {str(e)}'}, status=500)
+        response_data = supervisor(session_id, user_text, step)
+        print(response_data,'마지막 응답')
+        return JsonResponse(response_data)
 
     return JsonResponse({'error': 'Invalid request method'}, status=400)
-
-
-# views.py
-# views.py
-import os
-import json
-import time
-import logging
-import requests  # 추가된 부분
-import paramiko
-from scp import SCPClient
-from django.conf import settings
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.core.files.storage import default_storage
-from django.core.files.base import ContentFile
-from cloudinary import config as cloudinary_config
-from cloudinary.uploader import upload as cloudinary_upload
-from lumaai import LumaAI
-from urllib.parse import urljoin
-import getpass
-
-
-ssh_server_ip = "185.150.27.254"  # Vast AI 서버의 공인 IP 주소
-ssh_port = 13761  # SSH 포트 번호
-ssh_username = "root"
-
-remote_directory = "/workspace/ComfyUI/output"  # ComfyUI 출력 디렉토리
-local_directory = "./media/images"  # 로컬 저장 디렉토리
-os.makedirs(local_directory, exist_ok=True)
-
-api_key = os.getenv("LUMAAI_API_KEY")
-if not api_key:
-    raise ValueError("LUMAAI_API_KEY 환경 변수가 설정되어 있지 않습니다.")
-
-# LumaAI 클라이언트 설정
-client = LumaAI(auth_token=api_key)
-
-# Cloudinary 설정
-cloudinary_cloud_name = os.getenv('CLOUDINARY_CLOUD_NAME')
-cloudinary_api_key = os.getenv('CLOUDINARY_API_KEY')
-cloudinary_api_secret = os.getenv('CLOUDINARY_API_SECRET')
-if not all([cloudinary_cloud_name, cloudinary_api_key, cloudinary_api_secret]):
-    raise ValueError("Cloudinary API 환경 변수가 설정되어 있지 않습니다.")
-
-cloudinary_config(
-    cloud_name=cloudinary_cloud_name,
-    api_key=cloudinary_api_key,
-    api_secret=cloudinary_api_secret
-)
-
-
-# 로깅 설정 강화
-logger = logging.getLogger(__name__)
-
-def setup_ssh_connection():
-    """SSH 연결 설정"""
-    try:
-        # 더 자세한 로깅 설정
-        logging.getLogger("paramiko").setLevel(logging.DEBUG)
-        
-        # Windows 환경에서 SSH 키 경로 직접 지정
-        ssh_key_path = r"C:\Users\Guest_KDT\.ssh\id_rsa"
-        logging.info(f"Using SSH key from: {ssh_key_path}")
-        
-        # SSH 클라이언트 설정
-        ssh = paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        
-        # 개인키 존재 확인
-        if not os.path.exists(ssh_key_path):
-            raise FileNotFoundError(f"SSH private key not found at {ssh_key_path}")
-            
-        # 개인키 로드 시도
-        try:
-            logging.info("Attempting to load private key...")
-            private_key = paramiko.RSAKey.from_private_key_file(ssh_key_path)
-            logging.info("Private key loaded successfully")
-        except paramiko.ssh_exception.PasswordRequiredException:
-            passphrase = getpass.getpass('Enter passphrase for key: ')
-            private_key = paramiko.RSAKey.from_private_key_file(ssh_key_path, password=passphrase)
-        except Exception as e:
-            logging.error(f"Failed to load private key: {e}")
-            raise
-        
-        # SSH 연결 시도
-        logging.info(f"Attempting to connect to {settings.SSH_SERVER_IP}:{settings.SSH_PORT}...")
-        ssh.connect(
-            ssh_server_ip,
-            port=ssh_port,
-            username=ssh_username,
-            pkey=private_key,
-            timeout=10
-        )
-        logging.info("SSH connection successful")
-        return ssh
-    except Exception as e:
-        logging.error(f"SSH connection failed: {str(e)}")
-        raise
-
-def get_latest_file_path(ssh, remote_directory):
-    """서버 디렉토리에서 가장 최근 파일 경로 반환"""
-    try:
-        stdin, stdout, stderr = ssh.exec_command(f"ls -t {remote_directory}/*.png | head -n 1")
-        latest_file = stdout.read().decode().strip()
-        if latest_file:
-            return latest_file
-        else:
-            raise FileNotFoundError("지정된 디렉토리에 파일이 없습니다.")
-    except Exception as e:
-        logging.error(f"최신 파일을 찾는 중 오류 발생: {e}")
-        raise
-
-def download_image_via_ssh(ssh, remote_path, local_path):
-    """SSH를 통해 Vast AI 서버에서 파일 다운로드"""
-    try:
-        with SCPClient(ssh.get_transport()) as scp:
-            scp.get(remote_path, local_path)
-        logging.info(f"이미지를 SSH로 다운로드했습니다: {local_path}")
-    except Exception as e:
-        logging.error(f"SSH로 이미지 다운로드 중 오류 발생: {e}")
-        raise
-
-def generate_video_with_lumaai(cloudinary_url):
-    """LumaAI를 통해 비디오 생성하고 로컬에 다운로드"""
-    try:
-        generation = client.generations.create(
-            prompt="The person in the scene should have minimal movement, with gentle, subtle motions like breathing or slight head turns",
-            keyframes={
-                "frame0": {
-                    "type": "image",
-                    "url": cloudinary_url
-                }
-            }
-        )
-        logging.info("LumaAI를 통해 비디오 생성 중...")
-        completed = False
-        while not completed:
-            time.sleep(10)
-            generation = client.generations.get(id=generation.id)
-            if generation.state == "completed":
-                completed = True
-                video_url = generation.assets.video
-
-                # 비디오 다운로드
-                video_response = requests.get(video_url, stream=True)
-
-                # MEDIA_ROOT 경로 내 'video' 폴더에 비디오 파일 저장
-                video_folder = os.path.join(settings.MEDIA_ROOT, 'video')
-                if not os.path.exists(video_folder):
-                    os.makedirs(video_folder)  # 'video' 폴더가 없다면 생성
-
-                video_path = os.path.join(video_folder, f"{generation.id}.mp4")
-                with open(video_path, 'wb') as video_file:
-                    for chunk in video_response.iter_content(chunk_size=1024):
-                        if chunk:
-                            video_file.write(chunk)
-                logging.info(f"비디오가 로컬에 다운로드되었습니다: {video_path}")
-                return video_path
-            elif generation.state == "failed":
-                raise RuntimeError(f"비디오 생성 실패: {generation.failure_reason}")
-            else:
-                logging.info("비디오 생성 중... 잠시만 기다려주세요.")
-    except Exception as e:
-        logging.error(f"LumaAI 비디오 생성 중 오류 발생: {e}")
-        raise
-
-
-
-ge_count = 2
-@csrf_exempt
-def generate_image(request):
-    global ge_count
-    """이미지 생성 및 다운로드 뷰"""
-    try:
-        logger.info("이미지 생성 프로세스 시작")
-
-        try:
-            body = json.loads(request.body.decode('utf-8'))
-            image_prompt = body.get('prompt', {}).get('description', '')
-        except Exception as e:
-            logger.error(f"요청 본문 파싱 실패: {str(e)}")
-            return JsonResponse({
-                'status': 'error',
-                'message': '요청 본문을 파싱하는 데 실패했습니다.'
-            }, status=400)
-        print(image_prompt)
-        # workflow JSON 파일 경로 확인
-        workflow_path = os.path.join(settings.BASE_DIR, 'workflow_api.json')
-        logger.info(f"Workflow 파일 경로: {workflow_path}")
-        
-        # workflow 파일 존재 확인
-        if not os.path.exists(workflow_path):
-            logger.error(f"Workflow 파일을 찾을 수 없음: {workflow_path}")
-            return JsonResponse({
-                'status': 'error',
-                'message': 'Workflow 파일을 찾을 수 없습니다.'
-            }, status=400)
-
-        # workflow JSON 로드
-        try:
-            with open(workflow_path) as f:
-                workflow = json.load(f)
-            logger.info("Workflow JSON 로드 성공")
-        except Exception as e:
-            logger.error(f"Workflow JSON 로드 실패: {str(e)}")
-            return JsonResponse({
-                'status': 'error',
-                'message': 'Workflow 파일 로드에 실패했습니다.'
-            }, status=400)
-
-        for key, node in workflow.items():
-            if isinstance(node, dict) and node.get("class_type") == "CLIPTextEncode":
-                node["inputs"]["text"] = image_prompt
-
-        server_address = "http://127.0.0.1:8189"
-        # ComfyUI API 요청
-        try:
-            logger.info(f"ComfyUI 서버 주소: {settings.COMFYUI_SERVER_ADDRESS}")
-            response = requests.post(
-                f"{server_address}/prompt",
-                json={"prompt": workflow}
-            )
-            logger.info(f"ComfyUI API 응답 상태 코드: {response.status_code}")
-            if response.status_code != 200:
-                logger.error(f"ComfyUI API 오류 응답: {response.text}")
-                return JsonResponse({
-                    'status': 'error',
-                    'message': f'ComfyUI API 오류: {response.status_code}'
-                }, status=400)
-        except Exception as e:
-            logger.error(f"ComfyUI API 요청 실패: {str(e)}")
-            return JsonResponse({
-                'status': 'error',
-                'message': f'ComfyUI API 요청 실패: {str(e)}'
-            }, status=500)
-
-        # SSH 연결
-        try:
-            logger.info(f"SSH 연결 시도: {settings.SSH_SERVER_IP}:{settings.SSH_PORT}")
-            ssh = setup_ssh_connection()
-            logger.info("SSH 연결 성공")
-        except Exception as e:
-            logger.error(f"SSH 연결 실패: {str(e)}")
-            return JsonResponse({
-                'status': 'error',
-                'message': f'SSH 연결 실패: {str(e)}'
-            }, status=500)
-
-        try:
-            # 최신 이미지 파일 경로 가져오기
-            remote_image_path = get_latest_file_path(ssh, settings.REMOTE_DIRECTORY)
-            logger.info(f"원격 이미지 경로: {remote_image_path}")
-            file_name = os.path.basename(remote_image_path)
-            
-            local_image_path = os.path.join(local_directory, file_name).replace('\\', '/')
-            # print(local_image_path,'합친 경로')
-            # 이미지 다운로드
-            local_file_path = download_image_via_ssh(ssh, remote_image_path, local_image_path)
-            logger.info(f"로컬 파일 경로: {local_file_path}")
-
-            upload_result = cloudinary_upload(local_image_path, public_id='test_image', overwrite=True)
-            cloudinary_url = upload_result['secure_url']
-            logging.info(f"Cloudinary에 이미지 업로드 완료: {cloudinary_url}")
-            ge_count +=1
-            # 이미지 URL 생성
-            image_url = request.build_absolute_uri(settings.MEDIA_URL + local_image_path)
-            # print(image_url,'첫번쨰 URL')
-            image_url = image_url.replace('\\', '/')
-            # print(image_url,'두번째 URL')
-            generated_image_url = urljoin('http://127.0.0.1:8000/media/', image_url.split('media/')[-1])
-            #print(generated_image_url,'세번쨰 URL')
-            logger.info(f"생성된 이미지 URL: {generated_image_url}")
-            video_path = generate_video_with_lumaai(cloudinary_url)
-            video_url = request.build_absolute_uri(settings.MEDIA_URL + 'video/' + os.path.basename(video_path))
-            print(video_path,video_url)
-            
-            return JsonResponse({
-                'id' : ge_count,
-                'status': 'success',
-                'image_url': generated_image_url,
-                'video_url' : video_url,
-            })
-
-
-        except Exception as e:
-            logger.error(f"이미지 처리 중 오류 발생: {str(e)}")
-            return JsonResponse({
-                'status': 'error',
-                'message': f'이미지 처리 중 오류 발생: {str(e)}'
-            }, status=500)
-
-        finally:
-            if ssh:
-                ssh.close()
-                logger.info("SSH 연결 종료")
-
-    except Exception as e:
-        logger.error(f"예상치 못한 오류: {str(e)}")
-        return JsonResponse({
-            'status': 'error',
-            'message': f'서버 오류가 발생했습니다: {str(e)}'
-        }, status=500)
