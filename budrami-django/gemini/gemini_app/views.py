@@ -186,40 +186,21 @@ def get_session_history(session_id: str):
         store[session_id] = ChatMessageHistory()
     return store[session_id]
 
-def create_agent_with_react(role: str):
-    # tools = [
-    #     Tool(
-    #         name="search_tool",
-    #         func=lambda x: f"검색 결과 없음: {x}",
-    #         description="사용자의 질문에 검색 결과 제공"
-    #     )
-    # ]
-
-    # 초기화용 빈 대화 기록
-    empty_chat_history = []
-    # 각 역할별 프롬프트에 현재 단계 context 추가
-    tool_names=[tool.name for tool in tools]
-    prompt.partial_variables["tools"]=tools
-    prompt.partial_variables["tool_names"]=tool_names
-    prompt.partial_variables["role"]=role
-    # (
-    #     tools,
-        # tool_names=[tool.name for tool in tools],
-        # agent_scratchpad="",
-        # role=role,
-        # input="",
-        # chat_history=empty_chat_history
-    # )
-    # print(formatted_prompt, '이게 위의 프롬프트')
-    # print("----------------")
-    # print(prompt,'형태')
-
-    react_agent = create_react_agent(
-        llm=llm,
-        tools=tools,
-        prompt=prompt
-    )
-    return AgentExecutor(agent=react_agent, tools=tools, verbose=True,handle_parsing_errors=True)
+def create_simple_chain(role: str):
+    # 단순화된 프롬프트 템플릿
+    simple_prompt = ChatPromptTemplate.from_messages([
+        ("system", 
+         "당신은 노인 대상 생애 회고 치료를 전문으로 하는 '봄이'라는 상담사입니다. "
+         "손녀처럼 친근하게 대화하며, 다음 역할을 수행하세요:\n\n"
+         "{role}"
+        ),
+        MessagesPlaceholder(variable_name="chat_history"),
+        ("user", "{input}")
+    ])
+    
+    # 단순 체인 생성
+    chain = simple_prompt | llm | StrOutputParser()
+    return chain
 
 # 역할 정의
 roles = {
@@ -231,7 +212,7 @@ roles = {
 
 # 각 역할별 에이전트 생성 및 초기화
 agents = {
-    role_key: create_agent_with_react(role_content)
+    role_key: create_simple_chain(role_content)
     for role_key, role_content in roles.items()
 }
 
@@ -239,46 +220,35 @@ def supervisor(session_id, user_text, step):
     if step >= len(roles):
         return {"response": "#### 대화 종료 ####", "step": step}
     
-    # 현재 단계의 역할 가져오기
     role_key = list(roles.keys())[step]
-    selected_agent = agents[role_key]
+    role_content = roles[role_key]
     
-    # 공유된 대화 기록을 사용하는 에이전트
-    agent_with_history = RunnableWithMessageHistory(
-        selected_agent,
-        get_session_history,  # 단일 세션 히스토리 사용
-        input_messages_key="input",
-        history_messages_key="chat_history"
-    )
-    tools = [
-        Tool(
-            name="search_tool",
-            func=lambda x: f"검색 결과 없음: {x}",
-            description="사용자의 질문에 검색 결과 제공"
-        )
-    ]
-    # 현재 단계 정보를 포함하여 실행
-    config = {
-        "configurable": {
-            "session_id": session_id,
-            "current_step": step,
-            "current_role": role_key,
+    try:
+        chain = create_simple_chain(role_content)
+        chat_history = get_dialogues_from_store(session_id)
+        
+        response = chain.invoke({
+            "input": user_text,
+            "chat_history": chat_history,
+            "role": role_content
+        })
+        
+        # 대화 기록 저장
+        history = get_session_history(session_id)
+        history.add_user_message(user_text)
+        history.add_ai_message(response)
+        
+        return {
+            "response": response,
+            "step": step + 1
         }
         
-    }
-    
-    # 이전 대화 기록에 현재 단계 정보 추가
-    chat_history = get_session_history(session_id)
-    system_message = f"\n현재 단계: {role_key} 시기에 대한 대화를 시작합니다.\n"
-    
-    result = agent_with_history.invoke(
-        {
-            "input": f"{system_message}\n{user_text}",
-        },
-        config=config,
-    )
-    
-    return {"response": result, "step": step + 1}
+    except Exception as e:
+        print(f"Error in supervisor: {e}")
+        return {
+            "response": "죄송합니다. 다시 한 번 말씀해 주시겠어요?",
+            "step": step
+        }
 
 def get_dialogues_from_store(session_id):
     if session_id in store:
@@ -321,6 +291,6 @@ def process_speech(request):
 
         response_data = supervisor(session_id, user_text, step)
         print(response_data,'마지막 응답')
-        return JsonResponse(response_data)
+        return JsonResponse({'text': response_data['response'], 'step': response_data['step']})
 
     return JsonResponse({'error': 'Invalid request method'}, status=400)
